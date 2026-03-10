@@ -323,6 +323,20 @@ npm run dev
 
 Open `http://localhost:5173`.
 
+### One-Command Full Health Check
+
+Starts backend + frontend, validates critical endpoints and exports, then exits:
+
+```bash
+./scripts/full_health_check.sh
+```
+
+If services are already running and you only want validation:
+
+```bash
+./scripts/full_health_check.sh --no-start
+```
+
 ## API
 
 - `GET /api/posts?limit=60`
