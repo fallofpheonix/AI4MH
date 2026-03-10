@@ -79,6 +79,70 @@ Design the logic layer that determines whether escalation to human review is war
 - Professional written communication.
 - Strong submissions demonstrate constraint discipline, clear logic, and understanding of public-sector responsibility.
 
+## Evaluation Criteria Interpretation (Technical)
+
+### 1. Systems Thinking and Architectural Clarity
+
+Evaluators expect a coherent end-to-end system, not isolated modeling.
+
+Required evidence:
+- Clear boundaries: inputs, processing stages, outputs, external dependencies.
+- Layered pipeline: ingestion, preprocessing, feature extraction, scoring/inference, uncertainty, escalation policy, human review, audit logging.
+- Component responsibilities and failure modes.
+- Data flow or architecture diagram.
+
+### 2. Responsible AI and Governance Awareness
+
+Public-sector use requires explicit accountability controls.
+
+Required evidence:
+- Audit trail for score generation and human decisions.
+- Human override and review thresholds.
+- Explainability and traceability of escalation decisions.
+- Assumption and model-update governance notes.
+
+### 3. Bias Identification and Mitigation Strategy
+
+Bias must be named and handled with measurable controls.
+
+Required evidence:
+- Bias sources: sampling, labeling, representation, model amplification.
+- Mitigation actions: reweighting/normalization/filtering and group-level checks.
+- Monitoring outputs that detect performance disparity over time.
+
+### 4. Treatment of Uncertainty and Confidence Modeling
+
+Predictions must include uncertainty-aware decision logic.
+
+Required evidence:
+- Confidence score or uncertainty proxy attached to each escalation decision.
+- Deferral rule (for example low confidence -> human review).
+- Threshold rationale tied to risk tolerance.
+
+### 5. Professional Written Communication
+
+The document must read like an institutional engineering design note.
+
+Required evidence:
+- Structured sections with concise technical language.
+- Clear definitions, formulas, and thresholds.
+- Diagram/table support where useful.
+- No marketing language or vague claims.
+
+### Strong Submission Characteristics
+
+- Constraint discipline: data, operational, ethical, and deployment limits are explicit.
+- Clear logic: each method has rationale and trade-off acknowledgment.
+- Public-sector responsibility: fairness, auditability, reversibility, and human oversight are non-negotiable.
+
+### Common Failure Patterns
+
+- Describing only model architecture without full decision pipeline.
+- Missing uncertainty handling.
+- Vague bias statements without mechanisms or metrics.
+- No governance thresholds or review policy.
+- Non-technical or promotional writing style.
+
 ## Project Title
 
 AI-Powered Behavioral Analysis for Suicide Prevention, Substance Use, and Mental Health Crisis Detection with Longitudinal Geospatial Crisis Trend Analysis
