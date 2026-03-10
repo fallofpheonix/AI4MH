@@ -36,9 +36,9 @@ Within 72 hours, multiple Alabama counties show increased negative sentiment and
 - Human-in-the-loop process
 - Audit logging structure
 
-3. Governance Reflection
-- Primary risk of premature deployment
-- Single most important safeguard
+3. Governance Reflection (Short Section)
+- Identify the primary risk of premature deployment
+- Identify the single most important safeguard
 
 ## Evaluation Criteria
 
@@ -51,6 +51,17 @@ Submissions are evaluated on:
 - Professional written communication
 
 Strong submissions demonstrate constraint discipline, clear logic, and understanding of public-sector responsibility.
+
+## Submission Requirements
+
+- 3-4 pages maximum (excluding optional diagram)
+- Optional single architecture diagram
+- Clear section headings required
+- Submit as a single PDF via the GSoC portal
+- Estimated time: 6-8 hours over one week
+- Work must be original
+- Use of generative AI tools must be disclosed
+- Plagiarized or template-based submissions will not be considered
 
 ## What This Repository Implements
 
