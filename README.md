@@ -40,6 +40,18 @@ Within 72 hours, multiple Alabama counties show increased negative sentiment and
 - Primary risk of premature deployment
 - Single most important safeguard
 
+## Evaluation Criteria
+
+Submissions are evaluated on:
+
+- Systems thinking and architectural clarity
+- Responsible AI and governance awareness
+- Bias identification and mitigation strategy
+- Treatment of uncertainty and confidence modeling
+- Professional written communication
+
+Strong submissions demonstrate constraint discipline, clear logic, and understanding of public-sector responsibility.
+
 ## What This Repository Implements
 
 1. Backend API (FastAPI)
