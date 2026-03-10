@@ -12,6 +12,73 @@ Mentor: David M. White, MPH, MPA
 
 Contact: dmwhite@ua.edu
 
+## Purpose of This Task
+
+This assessment evaluates architectural thinking, responsible AI reasoning, and communication clarity. It is designed to reflect the type of systems-level work required during GSoC.
+
+This is not a model-building competition.
+
+## Project Context
+
+AI4MH has completed its prototype phase (data ingestion, sentiment analysis, geocoding, dashboard visualization).
+
+The next phase focuses on governance readiness. The system must operate in a public health environment where reliability, auditability, bias mitigation, and human oversight are mandatory.
+
+This task simulates the type of design and reasoning work expected during the GSoC coding period.
+
+## Scenario
+
+AI4MH monitors aggregated public sentiment across Alabama counties.
+
+Within a 72-hour window, three counties show a significant increase in negative sentiment associated with depression and suicide-related language.
+
+The State Behavioral Health Office asks: "Is this a credible signal requiring attention?"
+
+Design the logic layer that determines whether escalation to human review is warranted.
+
+## Required Deliverables
+
+1. Crisis Signal Design (Core Component)
+   - Design a structured crisis scoring framework integrating:
+     - Sentiment intensity
+     - Volume spike detection
+     - Geographic clustering
+   - Your framework must include:
+     - Minimum sample size threshold
+     - Smoothing or stabilization method
+     - Confidence or uncertainty estimate
+   - Pseudocode is acceptable. Advanced machine learning is not required.
+2. Governance and Risk Controls
+   - Explain how the system addresses:
+     - Bot amplification or coordinated activity
+     - Media-driven spikes
+     - Rural underrepresentation or sparse data
+   - Define escalation thresholds and human-in-the-loop processes.
+   - Specify audit logging structure.
+3. Governance Reflection (Short Section)
+   - Identify the primary risk of premature deployment.
+   - Identify the single most important safeguard.
+
+## Submission Requirements
+
+- 3-4 pages maximum (excluding optional diagram).
+- Optional single architecture diagram.
+- Clear section headings required.
+- Submit as a single PDF via the GSoC portal.
+- Estimated time: 6-8 hours over one week.
+- Work must be original.
+- Use of generative AI tools must be disclosed.
+- Plagiarized or template-based submissions will not be considered.
+
+## Evaluation Criteria
+
+- Systems thinking and architectural clarity.
+- Responsible AI and governance awareness.
+- Bias identification and mitigation strategy.
+- Treatment of uncertainty and confidence modeling.
+- Professional written communication.
+- Strong submissions demonstrate constraint discipline, clear logic, and understanding of public-sector responsibility.
+
 ## Project Title
 
 AI-Powered Behavioral Analysis for Suicide Prevention, Substance Use, and Mental Health Crisis Detection with Longitudinal Geospatial Crisis Trend Analysis
