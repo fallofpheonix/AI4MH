@@ -124,6 +124,10 @@ Evaluators prioritize:
 Avoid:
 - Model-centric writeups without governance and decision policy.
 
+Supporting templates:
+- [3-4 Page Submission Template](docs/GSOC_submission_template.md)
+- [Mentor Rejection Checklist](docs/mentor_rejection_checklist.md)
+
 ## Submission Requirements
 
 - 3-4 pages maximum (excluding optional diagram).
