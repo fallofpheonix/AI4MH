@@ -331,6 +331,12 @@ Open `http://localhost:5173`.
 - `POST /api/alerts/{id}/review`
 - `GET /api/audit`
 - `POST /api/ingest?n=30`
+- `GET /api/export/json?kind=posts|scores|alerts|audit`
+- `GET /api/export/csv?kind=posts|scores|alerts|audit`
+
+Additional post-level fields for calibration:
+- `ground_truth_crisis` (synthetic truth label for simulation)
+- `ai_correct` (whether NLP flag matches truth label)
 
 ## Scope Limits (Intentional)
 

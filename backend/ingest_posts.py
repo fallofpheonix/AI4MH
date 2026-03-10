@@ -55,6 +55,8 @@ def generate_post(is_bot: bool = False) -> dict:
         "comments": random.randint(0, 80),
         "is_bot": is_bot,
         "is_crisis_text": is_crisis,
+        # Synthetic ground-truth tag for calibration/analysis workflows.
+        "ground_truth_crisis": is_crisis,
     }
 
 def generate_dataset(n: int = 300) -> list[dict]:

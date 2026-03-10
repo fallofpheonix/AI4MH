@@ -13,8 +13,11 @@ Endpoints consumed by the React dashboard:
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 import datetime
+import csv
+import io
 
 from ingest_posts      import generate_dataset
 from nlp_processing    import analyze_batch
@@ -34,6 +37,30 @@ app.add_middleware(
 # ── In-memory state (swap for PostgreSQL in production) ───────────────────────
 _posts:  list[dict] = []
 _scores: list[dict] = []
+
+
+def _select_export_rows(kind: str) -> list[dict]:
+    if kind == "posts":
+        return _posts
+    if kind == "scores":
+        return _scores
+    if kind == "alerts":
+        return get_alerts()
+    if kind == "audit":
+        return get_audit_log()
+    raise ValueError(f"Unsupported export kind: {kind}")
+
+
+def _to_csv(rows: list[dict]) -> str:
+    if not rows:
+        return ""
+    fields = sorted({k for r in rows for k in r.keys()})
+    buff = io.StringIO()
+    writer = csv.DictWriter(buff, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    for row in rows:
+        writer.writerow({k: row.get(k, "") for k in fields})
+    return buff.getvalue()
 
 
 def _refresh(n: int = 50):
@@ -94,3 +121,15 @@ def audit():
 def ingest(n: int = 30):
     _refresh(n)
     return {"message": f"Ingested {n} posts", "total_posts": len(_posts), "regions_scored": len(_scores)}
+
+
+@app.get("/api/export/json")
+def export_json(kind: str = "posts"):
+    rows = _select_export_rows(kind)
+    return {"kind": kind, "rows": rows, "count": len(rows), "exported_at": datetime.datetime.utcnow().isoformat()}
+
+
+@app.get("/api/export/csv", response_class=PlainTextResponse)
+def export_csv(kind: str = "posts"):
+    rows = _select_export_rows(kind)
+    return _to_csv(rows)
