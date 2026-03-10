@@ -59,6 +59,71 @@ Design the logic layer that determines whether escalation to human review is war
    - Identify the primary risk of premature deployment.
    - Identify the single most important safeguard.
 
+## Submission Blueprint (3-4 Pages, Maximum)
+
+Use exactly four sections in the written submission to stay within the page limit.
+
+### 1) System Overview (about 1/2 page)
+
+Include:
+- Inputs: social posts, timestamps, location metadata, interaction metadata.
+- Processing stages: collection -> preprocessing -> sentiment -> aggregation -> crisis scoring -> confidence -> escalation.
+- Outputs: `CrisisScore(region, window)`, `ConfidenceScore`, `EscalationFlag`.
+- Optional single architecture diagram.
+
+### 2) Crisis Signal Design (Core Component)
+
+Required signal families:
+- Sentiment intensity.
+- Volume spike detection.
+- Geographic clustering.
+
+Required methods:
+- Minimum sample-size threshold.
+- Smoothing/stabilization (for example EMA).
+- Confidence/uncertainty estimate.
+- Pseudocode for decision flow.
+
+Example scoring form (illustrative):
+- `score = w1*sentiment + w2*volume + w3*geo`
+- `smoothed = alpha*score + (1-alpha)*prev`
+- `if sample_size < N: low_confidence`
+
+Note:
+- Weight values in the document can be examples.
+- Keep them explicitly separated from implementation constants in this repository.
+
+### 3) Governance and Risk Controls
+
+Address explicitly:
+- Bot amplification / coordinated activity (detection + down-weighting/capping).
+- Media-driven spikes (dampening when non-local amplification dominates).
+- Rural underrepresentation / sparse data (window extension, confidence reduction, neighboring context policy).
+- Escalation thresholds and human-in-the-loop gating.
+- Audit logging schema with immutable decision trace.
+
+Minimum escalation policy format:
+- `<0.4`: no action
+- `0.4-0.7`: monitoring
+- `>0.7`: escalate to human review
+
+### 4) Governance Reflection (short)
+
+State:
+- Primary premature-deployment risk (false escalation -> panic/resource misallocation).
+- Single most important safeguard (mandatory human verification before action).
+
+### Evaluator Focus
+
+Evaluators prioritize:
+- System-level reasoning.
+- Instability/uncertainty awareness.
+- Risk mitigation quality.
+- Clear, constrained decision logic.
+
+Avoid:
+- Model-centric writeups without governance and decision policy.
+
 ## Submission Requirements
 
 - 3-4 pages maximum (excluding optional diagram).
