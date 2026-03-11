@@ -33,9 +33,8 @@ npm run dev -- --host 127.0.0.1 --port 5173
 
 ## Key Files
 - `ANSWER.md`
-- `backend/crisis_signal_engine.py`
-- `backend/governance_engine.py`
 - `backend/main.py`
+- `backend/nlp_processing.py`
+- `backend/crisis_scoring.py`
 - `frontend/src/App.jsx`
-- `docs/GSOC_submission_template.md`
-- `docs/mentor_rejection_checklist.md`
+- `scripts/full_health_check.sh`

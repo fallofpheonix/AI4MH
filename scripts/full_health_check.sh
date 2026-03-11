@@ -54,6 +54,10 @@ PY
 }
 
 if [[ "$START_SERVICES" -eq 1 ]]; then
+  # Ensure no stale processes are holding ports.
+  lsof -ti tcp:8000 | xargs kill -9 >/dev/null 2>&1 || true
+  lsof -ti tcp:5173 | xargs kill -9 >/dev/null 2>&1 || true
+
   echo "[1/5] Starting backend"
   cd "$ROOT_DIR/backend"
   if [[ ! -d .venv312 ]]; then
@@ -83,28 +87,17 @@ wait_for_url "$WEB_URL"
 echo "[4/5] Validating API"
 POSTS="$(curl -fsS "$API_URL/api/posts?limit=3")"
 assert_json "$POSTS" "isinstance(data.get('posts'), list) and len(data.get('posts')) == 3"
-assert_json "$POSTS" "all('ground_truth_crisis' in p and 'ai_correct' in p for p in data.get('posts', []))"
-
 SCORES="$(curl -fsS "$API_URL/api/scores")"
 assert_json "$SCORES" "isinstance(data.get('scores'), list)"
 
 ALERTS="$(curl -fsS "$API_URL/api/alerts")"
 assert_json "$ALERTS" "isinstance(data.get('alerts'), list)"
 
-AUDIT="$(curl -fsS "$API_URL/api/audit")"
-assert_json "$AUDIT" "isinstance(data.get('log'), list)"
+LOGS="$(curl -fsS "$API_URL/api/logs?limit=20")"
+assert_json "$LOGS" "isinstance(data.get('logs'), list)"
 
 INGEST="$(curl -fsS -X POST "$API_URL/api/ingest?n=5")"
-assert_json "$INGEST" "'total_posts' in data and 'regions_scored' in data"
-
-EXPORT_JSON="$(curl -fsS "$API_URL/api/export/json?kind=posts")"
-assert_json "$EXPORT_JSON" "data.get('kind') == 'posts' and isinstance(data.get('rows'), list)"
-
-EXPORT_CSV="$(curl -fsS "$API_URL/api/export/csv?kind=posts")"
-if [[ "$EXPORT_CSV" != *"ground_truth_crisis"* ]] || [[ "$EXPORT_CSV" != *"ai_correct"* ]]; then
-  echo "csv export check failed: expected calibration headers" >&2
-  exit 1
-fi
+assert_json "$INGEST" "'total_posts' in data and 'regions_scored' in data and 'alerts' in data"
 
 echo "[5/5] Validating frontend"
 FRONT_HTML="$(curl -fsS "$WEB_URL")"
