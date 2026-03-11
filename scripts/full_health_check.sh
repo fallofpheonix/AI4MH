@@ -96,6 +96,9 @@ assert_json "$ALERTS" "isinstance(data.get('alerts'), list)"
 LOGS="$(curl -fsS "$API_URL/api/logs?limit=20")"
 assert_json "$LOGS" "isinstance(data.get('logs'), list)"
 
+BIA="$(curl -fsS "$API_URL/api/bias")"
+assert_json "$BIA" "isinstance(data.get('by_tier'), dict) and isinstance(data.get('by_region'), list)"
+
 INGEST="$(curl -fsS -X POST "$API_URL/api/ingest?n=5")"
 assert_json "$INGEST" "'total_posts' in data and 'regions_scored' in data and 'alerts' in data"
 

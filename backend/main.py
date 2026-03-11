@@ -17,6 +17,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from ingest_posts import generate_dataset
+from ingest_posts import REGIONS
 from nlp_processing import analyze_batch
 from crisis_scoring import score_all_regions
 
@@ -36,6 +37,7 @@ _posts: list[dict] = []
 _scores: list[dict] = []
 _alerts: list[dict] = []
 _logs: list[dict] = []
+_region_population: dict[str, int] = {r["id"]: r["population"] for r in REGIONS}
 
 
 def _log(event: str, payload: dict | None = None) -> None:
@@ -85,6 +87,15 @@ def _refresh(n: int = 30) -> None:
     _log("ingest_completed", {"n": n, "total_posts": len(_posts), "regions": len(_scores)})
 
 
+def _population_tier(region_id: str) -> str:
+    pop = _region_population.get(region_id, 500_000)
+    if pop < 100_000:
+        return "rural"
+    if pop < 1_000_000:
+        return "suburban"
+    return "urban"
+
+
 @app.on_event("startup")
 def startup() -> None:
     _refresh(120)
@@ -111,6 +122,55 @@ def get_alerts():
 @app.get("/api/logs")
 def get_logs(limit: int = 100):
     return {"logs": _logs[-limit:]}
+
+
+@app.get("/api/bias")
+def get_bias_diagnostics():
+    """
+    Group-level diagnostics for bias monitoring.
+    This endpoint does not claim fairness compliance; it provides
+    transparent indicators to detect systematic regional skew.
+    """
+    score_by_region = {s["region_id"]: s for s in _scores}
+    alert_regions = {a["region"] for a in _alerts}
+
+    by_region = []
+    grouped: dict[str, list[dict]] = defaultdict(list)
+    for region_id, score in score_by_region.items():
+        row = {
+            "region_id": region_id,
+            "population_tier": _population_tier(region_id),
+            "post_count": score.get("post_count", 0),
+            "crisis_score": score.get("crisis_score", 0.0),
+            "confidence": score.get("confidence", 0.0),
+            "alert_flag": region_id in alert_regions,
+            "low_sample_flag": score.get("post_count", 0) < 20,
+        }
+        by_region.append(row)
+        grouped[row["population_tier"]].append(row)
+
+    by_tier = {}
+    for tier, rows in grouped.items():
+        n = len(rows)
+        alerts = sum(1 for r in rows if r["alert_flag"])
+        by_tier[tier] = {
+            "regions": n,
+            "avg_post_count": round(sum(r["post_count"] for r in rows) / max(n, 1), 4),
+            "avg_crisis_score": round(sum(r["crisis_score"] for r in rows) / max(n, 1), 4),
+            "avg_confidence": round(sum(r["confidence"] for r in rows) / max(n, 1), 4),
+            "alert_rate": round(alerts / max(n, 1), 4),
+            "low_sample_rate": round(sum(1 for r in rows if r["low_sample_flag"]) / max(n, 1), 4),
+        }
+
+    return {
+        "as_of": datetime.datetime.utcnow().isoformat(),
+        "by_tier": by_tier,
+        "by_region": by_region,
+        "notes": [
+            "Use these diagnostics for drift/skew detection across population tiers.",
+            "Human review remains mandatory for operational escalation decisions.",
+        ],
+    }
 
 
 @app.post("/api/ingest")

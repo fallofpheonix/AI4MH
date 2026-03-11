@@ -83,6 +83,7 @@ README.md                 # quickstart and doc index
 | GET | `/api/scores` | Regional scores |
 | GET | `/api/alerts` | Current review-required alerts |
 | GET | `/api/logs?limit=100` | Recent event logs |
+| GET | `/api/bias` | Group-level bias diagnostics by population tier |
 | POST | `/api/ingest?n=30` | Trigger ingest + score refresh |
 
 ## 6. Scoring Logic
@@ -185,7 +186,7 @@ Validation-only (if already running):
 This MVP directly supports the task deliverables:
 
 1. Crisis Signal Design: scoring pipeline and thresholds
-2. Governance/Risk Controls: alert gating + logs + human-review-required status
+2. Governance/Risk Controls: alert gating + logs + human-review-required status + bias diagnostics endpoint
 3. Governance Reflection: documented in `ANSWER.md`
 
 For evaluator-first content, read `ANSWER.md`.
