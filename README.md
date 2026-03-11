@@ -2,6 +2,13 @@
 
 Read this first: `ANSWER.md`.
 
+## Documentation
+
+- Evaluator-facing answer: `ANSWER.md`
+- Full technical documentation: `docs/PROJECT_DOCUMENTATION.md`
+- Submission template: `docs/GSOC_submission_template.md`
+- Rejection checklist: `docs/mentor_rejection_checklist.md`
+
 ## Submission Scope
 This repository provides a direct implementation response for the AI4MH contributor-selection task:
 
@@ -33,6 +40,7 @@ npm run dev -- --host 127.0.0.1 --port 5173
 
 ## Key Files
 - `ANSWER.md`
+- `docs/PROJECT_DOCUMENTATION.md`
 - `backend/main.py`
 - `backend/nlp_processing.py`
 - `backend/crisis_scoring.py`
