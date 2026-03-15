@@ -1,62 +1,50 @@
-# AI4MH
+# AI4MH: AI-Powered Crisis Monitoring
 
-AI4MH is a governance-first crisis monitoring prototype for early detection of suicide, substance-use, and mental-health distress signals from online discussion streams. The repository is intentionally small: one backend, one frontend, and a small set of canonical markdown documents that define scope, architecture, and development direction.
+AI4MH (AI for Mental Health) is a public health monitoring system designed to detect emerging suicide, substance use, and mental health crises in real time using NLP and geospatial analysis.
 
-## Primary Project Documents
+## 🚀 Key Features
+- **Behavioral Analysis**: Detects crisis-related language and distress escalation patterns.
+- **Geospatial Hotspots**: Real-time and longitudinal heatmaps of crisis trends across regions.
+- **Governance-Ready**: Mandatory human-in-the-loop escalation logic with bot-filtering.
+- **Explainable Scoring**: Weighted crisis indicators for transparent decision support.
 
-These files are the authoritative source for future development:
-
-- [docs/PROJECT_SPEC.md](/Users/fallofpheonix/Project/Human AI/AI4MH/docs/PROJECT_SPEC.md)
-- [docs/ARCHITECTURE.md](/Users/fallofpheonix/Project/Human AI/AI4MH/docs/ARCHITECTURE.md)
-- [docs/ROADMAP.md](/Users/fallofpheonix/Project/Human AI/AI4MH/docs/ROADMAP.md)
-
-## Repository Scope
-
-- `backend/`: FastAPI service, ingestion, NLP enrichment, regional scoring.
-- `frontend/`: single-page monitoring UI.
-- `scripts/full_health_check.sh`: end-to-end local validation.
-- `index.md`: GitHub Pages project page.
-
-## Runtime Pipeline
+## 🛠 Project Architecture
+The system consists of a **FastAPI backend** for high-performance scoring and a **React frontend** for regional monitoring.
 
 ```text
-Posts -> NLP Enrichment -> Regional Aggregation -> Crisis Score
-      -> Confidence -> Escalation Gate -> Alerts + Logs -> UI
+Synthetic Posts -> NLP Enrichment -> Regional Aggregation -> Crisis Scoring -> Human Alerting
 ```
 
-## Core Rules
+## 📥 Installation
 
-- No automated intervention.
-- Escalation means `review_required` only.
-- Regional outputs must include `crisis_score` and `confidence`.
-- Logs remain append-only for traceability.
+### Prerequisites
+- Python 3.10+
+- Node.js & npm
 
-## Local Run
-
-### Backend
-
+### Backend Setup
 ```bash
 cd backend
-python3.12 -m venv .venv312
-source .venv312/bin/activate
 pip install -r requirements.txt
-uvicorn main:app --host 127.0.0.1 --port 8000
+python main.py
 ```
 
-### Frontend
-
+### Frontend Setup
 ```bash
 cd frontend
 npm install
-npm run dev -- --host 127.0.0.1 --port 5173
+npm run dev
 ```
 
-## Validation
+## 📈 Usage
+1. Start the backend and frontend servers.
+2. Access the operator dashboard at `http://localhost:5173`.
+3. Monitor real-time logs and regional score escalations.
+4. Use the `biases` panel to audit data quality and geographic representation.
 
-```bash
-./scripts/full_health_check.sh
-```
+## 🤝 Contribution
+Contributions are welcome! Please see the [GSoC 2026 Proposal](docs/gsoc_proposal.md) for the roadmap and technical methodology. 
+- **Tests**: Run `scripts/full_health_check.sh` before submitting PRs.
+- **Contact**: human-ai@cern.ch
 
-## License
-
-No license file is currently defined in the repository.
+## 📜 License
+MIT License. See `LICENSE` for details.
