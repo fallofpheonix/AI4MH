@@ -1,24 +1,40 @@
-# AI4MH (AI for Mental Health Crisis Monitoring)
+# AI4MH
 
-Read this first: `ANSWER.md`.
+AI4MH is a governance-first crisis monitoring prototype for early detection of suicide, substance-use, and mental-health distress signals from online discussion streams. The repository is intentionally small: one backend, one frontend, and a small set of canonical markdown documents that define scope, architecture, and development direction.
 
-## Documentation
+## Primary Project Documents
 
-- Evaluator-facing answer: `ANSWER.md`
-- Full technical documentation: `docs/PROJECT_DOCUMENTATION.md`
-- Submission template: `docs/GSOC_submission_template.md`
-- Rejection checklist: `docs/mentor_rejection_checklist.md`
+These files are the authoritative source for future development:
 
-## Submission Scope
-This repository provides a direct implementation response for the AI4MH contributor-selection task:
+- [docs/PROJECT_SPEC.md](/Users/fallofpheonix/Project/Human AI/AI4MH/docs/PROJECT_SPEC.md)
+- [docs/ARCHITECTURE.md](/Users/fallofpheonix/Project/Human AI/AI4MH/docs/ARCHITECTURE.md)
+- [docs/ROADMAP.md](/Users/fallofpheonix/Project/Human AI/AI4MH/docs/ROADMAP.md)
 
-1. Crisis Signal Design
-2. Governance & Risk Controls
-3. Governance Reflection
+## Repository Scope
 
-All three are mapped to code and execution steps in `ANSWER.md`.
+- `backend/`: FastAPI service, ingestion, NLP enrichment, regional scoring.
+- `frontend/`: single-page monitoring UI.
+- `scripts/full_health_check.sh`: end-to-end local validation.
+- `index.md`: GitHub Pages project page.
 
-## Quick Run
+## Runtime Pipeline
+
+```text
+Posts -> NLP Enrichment -> Regional Aggregation -> Crisis Score
+      -> Confidence -> Escalation Gate -> Alerts + Logs -> UI
+```
+
+## Core Rules
+
+- No automated intervention.
+- Escalation means `review_required` only.
+- Regional outputs must include `crisis_score` and `confidence`.
+- Logs remain append-only for traceability.
+
+## Local Run
+
+### Backend
+
 ```bash
 cd backend
 python3.12 -m venv .venv312
@@ -27,22 +43,20 @@ pip install -r requirements.txt
 uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
+### Frontend
+
 ```bash
 cd frontend
 npm install
 npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-## Quick Validation
+## Validation
+
 ```bash
-./scripts/full_health_check.sh --no-start
+./scripts/full_health_check.sh
 ```
 
-## Key Files
-- `ANSWER.md`
-- `docs/PROJECT_DOCUMENTATION.md`
-- `backend/main.py`
-- `backend/nlp_processing.py`
-- `backend/crisis_scoring.py`
-- `frontend/src/App.jsx`
-- `scripts/full_health_check.sh`
+## License
+
+No license file is currently defined in the repository.
