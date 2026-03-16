@@ -31,7 +31,7 @@ from pipeline.alert import generate_alerts
 from pipeline.enrich import enrich_batch
 from pipeline.ingest import REGIONS, generate_dataset
 from pipeline.score import score_all_regions
-from storage.memory import MemoryStore
+from storage.sqlite import SQLiteStore
 
 app = FastAPI(title="AI4MH API")
 
@@ -44,7 +44,7 @@ app.add_middleware(
 
 # Single storage instance — replace with a different Store subclass to swap
 # backends (e.g. RedisStore, SQLiteStore).
-_store = MemoryStore(max_posts=settings.max_posts)
+_store = SQLiteStore(max_posts=settings.max_posts, db_path="ai4mh.db")
 
 _region_population: dict[str, int] = {r["id"]: r["population"] for r in REGIONS}
 

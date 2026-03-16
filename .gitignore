@@ -8,3 +8,4 @@ node_modules/
 dist/
 .pytest_cache/
 *.egg-info/
+\n.venv_ai4mh/\nai4mh.db\n
