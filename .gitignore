@@ -4,8 +4,12 @@ __pycache__/
 .DS_Store
 .venv/
 .venv312/
+.venv_ai4mh/
 node_modules/
 dist/
 .pytest_cache/
 *.egg-info/
-\n.venv_ai4mh/\nai4mh.db\n
+ai4mh.db
+ai4mh.db-shm
+ai4mh.db-wal
+

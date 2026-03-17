@@ -22,7 +22,7 @@ Included:
 - minimal monitoring dashboard,
 - configuration system with environment-variable overrides,
 - schema validation for all pipeline models,
-- storage abstraction (in-memory; swappable for Redis/SQLite).
+- storage abstraction (SQLite persistent store by default).
 
 Excluded:
 

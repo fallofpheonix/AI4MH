@@ -12,7 +12,7 @@ Implemented:
 - alert/log APIs,
 - modular pipeline (pipeline/, models/, storage/, evaluation/),
 - Pydantic Settings configuration system,
-- in-memory storage with abstract interface,
+- persistent SQLite storage with abstract interface,
 - schema validation via Pydantic models,
 - partial region score updates (only affected regions rescored per cycle),
 - pytest unit and integration test suite,
@@ -49,8 +49,8 @@ Implemented:
 
 ### Phase 5: Operational readiness
 
-- Move from in-memory state to persistent storage (Redis or SQLite).
-- Implement Redis/SQLite backends by subclassing `storage.base.Store`.
+- [x] Move from in-memory state to persistent storage (Redis or SQLite).
+- [x] Implement Redis/SQLite backends by subclassing `storage.base.Store`.
 - Add deployment packaging and environment configuration.
 - Add background task support for long-running ingestion cycles.
 

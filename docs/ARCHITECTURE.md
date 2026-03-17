@@ -29,6 +29,7 @@ backend/
     storage/
         base.py            # Abstract Store interface
         memory.py          # In-memory Store implementation
+        sqlite.py          # Persistent SQLite Store implementation (WAL mode)
     models/
         post.py            # RawPost, EnrichedPost
         score.py           # RegionScore
@@ -55,7 +56,7 @@ backend/
 ### `main.py`
 
 - FastAPI entrypoint — routes only, no pipeline logic.
-- Instantiates one `MemoryStore` for the process lifetime.
+- Instantiates one `Store` (default: `SQLiteStore`) for the process lifetime.
 - Delegates all work to pipeline functions and the store.
 - Alert lifecycle endpoints: `POST /api/alerts/{id}/ack|dismiss|resolve`.
 
