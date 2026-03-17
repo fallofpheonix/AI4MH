@@ -1,30 +1,48 @@
-"""
-Pytest configuration for the AI4MH backend test suite.
-
-Provides shared fixtures used across test modules.
-"""
-
 from __future__ import annotations
 
-import sys
-import os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from unittest.mock import patch
 
 import pytest
-from models.alert import Alert
+from fastapi.testclient import TestClient
+
+from app.core.models.alert import Alert
+from app.core.runtime import ApplicationContainer
+from app.core.stores.memory import MemoryStore
+from app.main import create_app
+from app.services.alert_service import AlertService
+from app.services.enrichment_service import EnrichmentService
+from app.services.ingestion_service import IngestionService
+from app.services.pipeline_service import PipelineService
+from app.services.scoring_service import ScoringService
 
 
 @pytest.fixture()
-def seeded_alert():
-    """
-    Inject a deterministic *review_required* alert into the store so that
-    alert-lifecycle tests can run without relying on probabilistic ingestion.
+def store() -> MemoryStore:
+    return MemoryStore(max_posts=250)
 
-    The alert is removed after the test completes.
-    """
-    from main import _store
 
+@pytest.fixture()
+def client(store: MemoryStore):
+    alerts = AlertService(store)
+    container = ApplicationContainer(
+        pipeline=PipelineService(
+            store=store,
+            ingestion=IngestionService(),
+            enrichment=EnrichmentService(),
+            scoring=ScoringService(),
+            alerts=alerts,
+        ),
+        alerts=alerts,
+    )
+
+    with patch("app.main.build_container", return_value=container):
+        app = create_app()
+        with TestClient(app) as test_client:
+            yield test_client
+
+
+@pytest.fixture()
+def seeded_alert(store: MemoryStore) -> Alert:
     alert = Alert(
         id="test-alert-fixture",
         region="CA-LA",
@@ -32,14 +50,6 @@ def seeded_alert():
         status="review_required",
         confidence=0.80,
         sample_size=25,
-        score_breakdown={},
-        evidence_post_ids=[],
     )
-    existing = _store.get_alerts()
-    _store.save_alerts(existing + [alert])
-
-    yield alert
-
-    # Restore the original alert list (remove the fixture alert).
-    alerts = _store.get_alerts()
-    _store.save_alerts([a for a in alerts if a.id != "test-alert-fixture"])
+    store.save_alerts([alert])
+    return alert
