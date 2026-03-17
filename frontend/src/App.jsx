@@ -3,7 +3,7 @@ import { AlertList } from "./components/AlertList";
 import { PostTable } from "./components/PostTable";
 import { LogList } from "./components/LogList";
 
-const API = "http://localhost:8000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 
 export default function App() {
   const [posts, setPosts] = useState([]);
@@ -24,11 +24,14 @@ export default function App() {
   const fetchAll = useCallback(async () => {
     try {
       const [p, s, a, l] = await Promise.all([
-        fetch(`${API}/posts?limit=20`),
-        fetch(`${API}/scores`),
-        fetch(`${API}/alerts`),
-        fetch(`${API}/logs?limit=20`),
+        fetch(`${API_BASE_URL}/posts?limit=20`),
+        fetch(`${API_BASE_URL}/scores`),
+        fetch(`${API_BASE_URL}/alerts`),
+        fetch(`${API_BASE_URL}/logs?limit=20`),
       ]);
+      if (![p, s, a, l].every((response) => response.ok)) {
+        throw new Error("One or more requests failed");
+      }
       const [pj, sj, aj, lj] = await Promise.all([
         p.json(),
         s.json(),
@@ -41,14 +44,17 @@ export default function App() {
       setLogs(lj.logs || []);
       setError("");
     } catch (e) {
-      setError("Backend not reachable on :8000");
+      setError("Unable to reach the backend API");
     }
   }, []);
 
   const ingest = useCallback(async () => {
     setLoading(true);
     try {
-      await fetch(`${API}/ingest?n=30`, { method: "POST" });
+      const response = await fetch(`${API_BASE_URL}/ingest?n=30`, { method: "POST" });
+      if (!response.ok) {
+        throw new Error("Ingest request failed");
+      }
       await fetchAll();
       setError("");
     } catch (e) {
@@ -75,9 +81,9 @@ export default function App() {
 
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", maxWidth: 1100, margin: "0 auto", padding: 20 }}>
-      <h1 style={{ marginBottom: 8 }}>AI4MH - Modular Crisis Monitor</h1>
+      <h1 style={{ marginBottom: 8 }}>AI4MH</h1>
       <p style={{ marginTop: 0, color: "#4b5563" }}>
-        Production-ready frontend with React.memo and component isolation.
+        Lightweight dashboard for reviewing regional signals and alert activity.
       </p>
 
       <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>

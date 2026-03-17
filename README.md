@@ -1,84 +1,60 @@
-# AI4MH: AI-Powered Crisis Monitoring
+# AI4MH
 
-AI4MH (AI for Mental Health) is a public health monitoring system designed to detect emerging suicide, substance use, and mental health crises in real time using NLP and geospatial analysis.
+AI4MH is a small crisis-monitoring demo: it generates synthetic posts, enriches them with sentiment and keyword signals, scores regions, and exposes the results through a FastAPI backend and a React dashboard.
 
-## 🚀 Key Features
-- **Behavioral Analysis**: Detects crisis-related language and distress escalation patterns.
-- **Geospatial Hotspots**: Real-time and longitudinal heatmaps of crisis trends across regions.
-- **Governance-Ready**: Mandatory human-in-the-loop escalation logic with bot-filtering.
-- **Explainable Scoring**: Weighted crisis indicators for transparent decision support.
-- **Alert Lifecycle**: Full `review_required → acknowledged → resolved/dismissed` workflow.
-- **Modular Pipeline**: Independent, testable stages for ingest, enrichment, scoring, and alerting.
+## What it does
 
-## 🛠 Project Architecture
-The system consists of a **FastAPI backend** with a modular pipeline and a **React frontend** for regional monitoring.
+- ingests synthetic mental-health discussion posts
+- scores regions using sentiment, volume, clustering, and trend signals
+- creates review alerts when signal strength crosses a threshold
+- keeps a simple audit trail for ingest and alert transitions
+
+## Project shape
 
 ```text
-Synthetic Posts
-  → NLP Enrichment  (pipeline/enrich.py)
-  → Aggregation     (pipeline/aggregate.py)
-  → Crisis Scoring  (pipeline/score.py)
-  → Alert Gen       (pipeline/alert.py)
-  → HTTP API        (main.py)
-  → React Dashboard (frontend/src/App.jsx)
+backend/
+  app/
+    api/       HTTP routes and request wiring
+    config/    runtime settings
+    core/      domain models and storage contracts
+    services/  ingestion, enrichment, scoring, alert workflows
+    utils/     small shared helpers
+  tests/       critical-path tests
+frontend/
+  src/         dashboard UI
 ```
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full module breakdown.
+## Run locally
 
-## 📥 Installation
-
-### Prerequisites
-- Python 3.10+
-- Node.js & npm
-
-### Backend Setup
 ```bash
 cd backend
+python3 -m venv .venv312
+source .venv312/bin/activate
 pip install -r requirements.txt
+cp .env.example .env
 uvicorn main:app --reload
 ```
 
-### Frontend Setup
+In another shell:
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-## ⚙️ Configuration
+Backend runs on `http://localhost:8000` and the dashboard runs on `http://localhost:5173`.
 
-All backend constants can be overridden via environment variables with the `AI4MH_` prefix:
-
-```bash
-export AI4MH_ALERT_THRESHOLD=0.80
-export AI4MH_MAX_POSTS=1000
-```
-
-See `backend/config.py` for the full list of settings.
-
-## 📈 Usage
-1. Start the backend and frontend servers.
-2. Access the operator dashboard at `http://localhost:5173`.
-3. Monitor real-time logs and regional score escalations.
-4. Use the `biases` panel to audit data quality and geographic representation.
-5. Acknowledge, dismiss, or resolve alerts via `POST /api/alerts/{id}/ack|dismiss|resolve`.
-
-## 🧪 Tests
+## Tests
 
 ```bash
 cd backend
-python -m pytest tests/ -v
+source .venv312/bin/activate
+pytest
 ```
 
-Tests cover:
-- Scoring signal functions (`sentiment_intensity`, `volume_spike`, `geo_cluster`, `trend_acceleration`, `confidence`)
-- Region-level scoring and `score_all_regions` aggregation
-- All API endpoints including alert lifecycle transitions
+## A few decisions
 
-## 🤝 Contribution
-Contributions are welcome! Please see the [GSoC 2026 Proposal](docs/gsoc_proposal.md) for the roadmap and technical methodology. 
-- **Tests**: Run `scripts/full_health_check.sh` before submitting PRs.
-- **Contact**: human-ai@cern.ch
-
-## 📜 License
-MIT License. See `LICENSE` for details.
+- The backend keeps a thin API layer and pushes behavior into services.
+- SQLite is enough here; the store contract is deliberately small so it can be swapped later.
+- The scoring model is intentionally simple and explainable. It is not trying to be statistically clever.

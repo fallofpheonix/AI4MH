@@ -61,12 +61,12 @@ if [[ "$START_SERVICES" -eq 1 ]]; then
   echo "[1/5] Starting backend"
   cd "$ROOT_DIR/backend"
   if [[ ! -d .venv312 ]]; then
-    python3.12 -m venv .venv312
+    python3 -m venv .venv312
   fi
   # shellcheck disable=SC1091
   source .venv312/bin/activate
   if ! python -c "import fastapi,uvicorn,vaderSentiment,pydantic" >/dev/null 2>&1; then
-    pip install -q -r requirements.txt
+    python -m pip install -q -r requirements.txt
   fi
   nohup uvicorn main:app --host 127.0.0.1 --port 8000 > /tmp/ai4mh_health_backend.log 2>&1 &
   BACK_PID=$!
