@@ -124,31 +124,17 @@ API Endpoints:     All 8 functional ✅
 
 ```
 backend/
-  ├── config.py                 ✅ Configuration management
-  ├── main.py                   ✅ FastAPI application
-  ├── pipeline/                 ✅ Problem (6 modules)
-  │   ├── ingest.py
-  │   ├── enrich.py
-  │   ├── aggregate.py
-  │   ├── score.py
-  │   ├── alert.py
-  │   └── __init__.py
-  ├── models/                   ✅ Data models (3 modules)
-  │   ├── post.py
-  │   ├── score.py
-  │   ├── alert.py
-  │   └── __init__.py
-  ├── storage/                  ✅ Storage layer (3 modules)
-  │   ├── base.py
-  │   ├── memory.py
-  │   ├── sqlite.py
-  │   └── __init__.py
-  ├── evaluation/               ✅ Metrics (1 module)
-  │   ├── metrics.py
-  │   └── __init__.py
+  ├── main.py                   ✅ Compatibility entrypoint
+  ├── app/
+  │   ├── api/                  ✅ Router, dependencies, versioned routes
+  │   ├── core/                 ✅ Config, container, store factory
+  │   ├── crud/                 ✅ Persistence layer
+  │   ├── schemas/              ✅ Typed payload models
+  │   ├── services/             ✅ Business logic
+  │   └── utils/                ✅ Shared helpers
   ├── lexicons/                 ✅ Crisis terms lexicon
   │   └── crisis_terms_v1.json
-  ├── tests/                    ✅ Test suite (42 tests)
+  ├── tests/                    ✅ Test suite (7 tests)
   │   ├── conftest.py
   │   ├── test_scoring.py
   │   ├── test_api.py
@@ -156,13 +142,15 @@ backend/
   └── requirements.txt          ✅ Dependencies
 
 frontend/
-  ├── src/                      ✅ React components
+  ├── src/                      ✅ Modular React app
+  │   ├── components/
+  │   ├── hooks/
+  │   ├── pages/
+  │   ├── services/
+  │   ├── styles/
+  │   ├── utils/
   │   ├── App.jsx
-  │   ├── main.jsx
-  │   └── components/
-  │       ├── AlertList.jsx
-  │       ├── LogList.jsx
-  │       └── PostTable.jsx
+  │   └── main.jsx
   ├── index.html                ✅ Entry point
   ├── package.json              ✅ Dependencies
   └── vite.config.js            ✅ Build configuration
@@ -238,7 +226,7 @@ cd frontend && npm run dev
 
 # 5. Access dashboard
 # Browser: http://localhost:5173
-# API: http://localhost:8000/api
+# API: http://localhost:8000/api/v1
 
 # 6. Verify documentation
 ls -la SUBMISSION/*.md

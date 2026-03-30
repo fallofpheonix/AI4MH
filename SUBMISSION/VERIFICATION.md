@@ -1,292 +1,109 @@
 # Verification Guide
 
-Step-by-step verification that your AI4MH installation is working correctly.
+Follow these steps to verify that the repository is runnable end-to-end.
 
-## Pre-Verification Checklist
-
-- [ ] Backend dependencies installed
-- [ ] Frontend dependencies installed
-- [ ] Python 3.10+ available
-- [ ] Node.js 16+ available
-- [ ] Ports 8000 and 5173 available
-
-## Verification Steps
-
-### Step 1: Backend Import Verification (1 minute)
+## 1. Verify Backend Imports
 
 ```bash
 cd backend
 source .venv312/bin/activate
-python3 -c "
-from main import app
-from config import settings
-from pipeline.score import score_all_regions
-print('✓ Backend imports successfully')
-print(f'✓ Python version: {__import__(\"sys\").version}')
-print(f'✓ Alert threshold: {settings.alert_threshold}')
-"
+python - <<'PY'
+from app.main import create_app
+from app.core.config import settings
+
+app = create_app()
+assert app.title == settings.app_name
+print("app:", app.title)
+print("api_prefix:", settings.api_prefix)
+print("sqlite_path:", settings.sqlite_path)
+PY
 ```
 
-Expected output:
-```
-✓ Backend imports successfully
-✓ Python version: 3.x.x ...
-✓ Alert threshold: 0.8
+## 2. Verify Backend Tests
+
+```bash
+cd backend
+./.venv312/bin/python -m pytest
 ```
 
-### Step 2: Frontend Build Verification (2 minutes)
+Expected result:
+
+```text
+7 passed
+```
+
+## 3. Verify Frontend Build
 
 ```bash
 cd frontend
 npm run build
 ```
 
-Expected output:
-```
-✓ [SUCCESS] built in XXms
-```
+## 4. Start Services
 
-### Step 3: Configuration Verification (1 minute)
+Backend:
 
 ```bash
 cd backend
 source .venv312/bin/activate
-python3 -c "
-from config import settings
-assert settings.alert_threshold > 0
-assert settings.confidence_threshold > 0
-assert abs(sum(settings.weights.values()) - 1.0) < 0.01
-print('✓ Configuration: Alert threshold =', settings.alert_threshold)
-print('✓ Configuration: Confidence threshold =', settings.confidence_threshold)
-print('✓ Configuration: Scoring weights sum =', sum(settings.weights.values()))
-"
+uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
-Expected output:
-```
-✓ Configuration: Alert threshold = 0.8
-✓ Configuration: Confidence threshold = 0.7
-✓ Configuration: Scoring weights sum = 1.0
-```
+Frontend:
 
-### Step 4: Scoring Engine Verification (2 minutes)
-
-```bash
-cd backend
-source .venv312/bin/activate
-python3 -c "
-from pipeline.score import _sentiment_intensity, _volume_spike
-from models.post import EnrichedPost
-import datetime
-
-# Test sentiment signal
-posts = [
-    EnrichedPost(
-                id='1', 
-                text='I am very sad',
-                sentiment_compound=-0.8,
-                region_id='region_1',
-                crisis_keywords=0,
-                created_at=datetime.datetime.now()
-            )
-]
-score = _sentiment_intensity(posts)
-print(f'✓ Sentiment signal: {score:.2f}')
-
-# Test volume signal
-posts_batch = posts * 5
-vol_signal = _volume_spike(posts_batch, baseline=1)
-print(f'✓ Volume signal: {vol_signal:.2f}')
-"
-```
-
-Expected output:
-```
-✓ Sentiment signal: 0.80
-✓ Volume signal: 0.50
-```
-
-### Step 5: Database Verification (1 minute)
-
-```bash
-cd backend
-source .venv312/bin/activate
-python3 -c "
-from storage.sqlite import SQLiteStore
-store = SQLiteStore(db_path=':memory:')
-posts = store.get_posts()
-print(f'✓ Database: {len(posts)} posts')
-alerts = store.get_alerts()
-print(f'✓ Database: {len(alerts)} alerts')
-print('✓ Database connection: OK')
-"
-```
-
-Expected output:
-```
-✓ Database: 0 posts
-✓ Database: 0 alerts
-✓ Database connection: OK
-```
-
-### Step 6: API Startup Verification (5 minutes)
-
-**Terminal 1: Start Backend**
-```bash
-cd backend
-source .venv312/bin/activate
-python -m uvicorn main:app --host 127.0.0.1 --port 8000
-```
-
-Wait for:
-```
-INFO:     Uvicorn running on http://127.0.0.1:8000
-```
-
-**Terminal 2: Test API**
-```bash
-# Wait for backend to initialize (30 seconds)
-sleep 30
-
-# Test API health
-curl -s http://127.0.0.1:8000/api/posts | python3 -m json.tool | head -20
-```
-
-Expected output:
-```json
-{
-  "posts": [
-    {
-      "id": "...",
-      "text": "...",
-      ...
-    }
-  ],
-  "total": 3
-}
-```
-
-### Step 7: Frontend Startup Verification (3 minutes)
-
-**Terminal 3: Start Frontend**
 ```bash
 cd frontend
-npm run dev
+npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-Wait for:
-```
-➜  Local:   http://127.0.0.1:5173/
-```
-
-**Terminal 4: Test Frontend**
-```bash
-curl -s http://localhost:5173 | head -20
-```
-
-Expected output: HTML content starting with `<!DOCTYPE html>`
-
-### Step 8: Dashboard Verification (3 minutes)
-
-1. Open browser: http://localhost:5173
-2. Look for:
-   - [ ] Dashboard loads without errors
-   - [ ] "Posts" section visible
-   - [ ] "Scores" section visible
-   - [ ] "Alerts" section visible
-   - [ ] "Logs" section visible
-
-### Step 9: API Endpoint Verification (2 minutes)
+## 5. Verify API Endpoints
 
 ```bash
-# In Terminal 2 (where you tested /api/posts)
-
-# Test all endpoints
-echo "Testing /api/scores..."
-curl -s http://127.0.0.1:8000/api/scores | python3 -c "import json, sys; d=json.load(sys.stdin); print(f\"✓ {len(d['scores'])} scores\")"
-
-echo "Testing /api/alerts..."
-curl -s http://127.0.0.1:8000/api/alerts | python3 -c "import json, sys; d=json.load(sys.stdin); print(f\"✓ {len(d['alerts'])} alerts\")"
-
-echo "Testing /api/logs..."
-curl -s http://127.0.0.1:8000/api/logs | python3 -c "import json, sys; d=json.load(sys.stdin); print(f\"✓ {len(d['logs'])} log entries\")"
-
-echo "Testing /api/bias..."
-curl -s http://127.0.0.1:8000/api/bias | python3 -c "import json, sys; d=json.load(sys.stdin); print(f\"✓ Bias data available\")"
+curl -s http://127.0.0.1:8000/api/v1/posts?limit=5 | python3 -m json.tool | head -20
+curl -s http://127.0.0.1:8000/api/v1/scores | python3 -m json.tool | head -20
+curl -s http://127.0.0.1:8000/api/v1/alerts | python3 -m json.tool | head -20
+curl -s http://127.0.0.1:8000/api/v1/logs?limit=5 | python3 -m json.tool | head -20
+curl -s http://127.0.0.1:8000/api/v1/bias | python3 -m json.tool | head -20
+curl -s -X POST "http://127.0.0.1:8000/api/v1/ingest?n=5" | python3 -m json.tool
 ```
 
-Expected output:
-```
-Testing /api/scores...
-✓ X scores
-Testing /api/alerts...
-✓ X alerts
-Testing /api/logs...
-✓ X log entries
-Testing /api/bias...
-✓ Bias data available
+Expected properties:
+
+- `/posts`: `posts` list and `total`
+- `/scores`: `scores` list and `updated_at`
+- `/alerts`: `alerts` list
+- `/logs`: `logs` list
+- `/bias`: `by_tier`, `by_region`, `notes`, `as_of`
+- `/ingest`: `total_posts`, `regions_scored`, `alerts`
+
+## 6. Verify Frontend Behavior
+
+Open `http://127.0.0.1:5173` and confirm:
+
+- page title is `AI4MH Dashboard`
+- header renders `AI4MH`
+- buttons `Ingest Posts` and `Pause` are visible
+- metrics for `Posts`, `Regions`, and `Alerts` are visible
+- sections `Alerts`, `Recent Posts`, and `Logs` are visible
+- clicking `Ingest Posts` refreshes data without console errors
+
+## 7. Run Automated Full-Stack Check
+
+If services are already running:
+
+```bash
+bash scripts/full_health_check.sh --no-start
 ```
 
-### Step 10: Full Health Check (5 minutes)
+If not:
 
 ```bash
 bash scripts/full_health_check.sh
 ```
 
-Expected output:
+Expected terminal tail:
+
+```text
+[5/5] Validating frontend
+PASS: full health check completed
 ```
-[1/5] Starting backend
-[2/5] Starting frontend
-[3/5] Waiting for services
-[4/5] Validating API
-[5/5] Running diagnostics
-✓ All checks passed
-```
-
-## Verification Summary
-
-Complete the checklist below:
-
-- [ ] Backend imports work (Step 1)
-- [ ] Frontend builds successfully (Step 2)
-- [ ] Configuration is valid (Step 3)
-- [ ] Scoring functions work (Step 4)
-- [ ] Database connection works (Step 5)
-- [ ] Backend API responds (Step 6)
-- [ ] Frontend serves content (Step 7)
-- [ ] Dashboard loads in browser (Step 8)
-- [ ] All API endpoints respond (Step 9)
-- [ ] Full health check passes (Step 10)
-
-## If Verification Fails
-
-### Common Issues
-
-**"Connection refused on port 8000"**
-- Ensure backend is running
-- Check backend startup logs for errors
-- Try: `python -m uvicorn main:app --port 8001`
-
-**"Frontend won't load"**
-- Ensure npm dependencies installed: `npm install`
-- Check frontend logs: `npm run dev` (run in terminal)
-- Try: `npm run dev -- --port 5174`
-
-**"Database errors"**
-- Reset database: `rm backend/ai4mh.db`
-- Restart backend
-
-**"CORS errors"**
-- Verify frontend URL in CORS config (main.py)
-- Clear browser cache
-- Check browser console for specific errors
-
-### Get Help
-
-See [INSTALLATION.md](INSTALLATION.md) troubleshooting section for more solutions.
-
----
-
-**Verification completed successfully!** 🎉
-
-Next step: Run tests - See [TESTING.md](SUBMISSION/TESTING.md)

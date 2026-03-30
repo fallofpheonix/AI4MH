@@ -4,60 +4,47 @@
 
 Implemented:
 
-- synthetic ingestion,
-- NLP enrichment (VADER + crisis keywords),
-- regional scoring (sentiment, volume, geo cluster, trend),
-- confidence and threshold gating,
-- alert lifecycle management (review_required → acknowledged/dismissed/resolved),
-- alert/log APIs,
-- modular pipeline (pipeline/, models/, storage/, evaluation/),
-- Pydantic Settings configuration system,
-- persistent SQLite storage with abstract interface,
-- schema validation via Pydantic models,
-- partial region score updates (only affected regions rescored per cycle),
-- pytest unit and integration test suite,
-- single-page monitor,
-- local health-check script.
+- synthetic ingestion in `backend/app/services/ingestion_service.py`
+- VADER enrichment and crisis keyword matching
+- region scoring with sentiment, volume, geo-cluster, and trend components
+- confidence calculation and escalation gating
+- alert lifecycle management with append-only log events
+- versioned API routes under `backend/app/api/v1`
+- persistence behind `backend/app/crud.Store`
+- SQLite-backed runtime store and in-memory test store
+- Pydantic schemas under `backend/app/schemas`
+- modular frontend with `pages`, `hooks`, `services`, `components`, `styles`, and `utils`
+- backend pytest coverage for scoring and API behavior
+- full-stack shell health check
 
-## Next Development Priorities
+## Next Priorities
 
-### Phase 1: Data realism
+### 1. Data Realism
 
-- Replace synthetic ingestion with replayable dataset loaders.
-- Add deduplication and source metadata normalization.
-- Introduce realistic time-window baselines.
+- Replace synthetic ingestion with replayable fixture datasets.
+- Add source metadata normalization and deduplication.
+- Introduce windowed baselines rather than whole-history approximations.
 
-### Phase 2: Governance hardening
+### 2. Governance Hardening
 
-- Make minimum sample thresholds explicit in scoring outputs.
-- Add media-spike dampening.
-- Add coordinated-activity heuristics.
-- Preserve evidence bundles for every generated alert (evidence_post_ids and score_breakdown are stored on each Alert).
+- Add operator identity and notes to alert transitions.
+- Add authentication and authorization.
+- Add explicit threshold-change audit trails.
 
-### Phase 3: Geospatial quality
+### 3. Persistence Evolution
 
-- Replace coarse region IDs with county-aligned geographic references.
-- Add longitudinal heatmap views and time-window navigation.
-- Separate county baselines from global baseline approximation.
+- Add a normalized relational schema if query complexity grows beyond JSON blobs in SQLite.
+- Add migration tooling if storage shape becomes nontrivial.
+- Add background execution support for longer ingest jobs.
 
-### Phase 4: Evaluation
+### 4. Frontend Depth
 
-- Add offline evaluation fixtures.
-- Measure precision, recall, and false-positive rate for alert generation.
-- Add region-tier comparisons for sparse-data bias monitoring.
-- Wire `evaluation/metrics.py` into an evaluation API endpoint.
+- Add alert action controls to the dashboard.
+- Add bias diagnostics views to the UI.
+- Add frontend test coverage.
 
-### Phase 5: Operational readiness
+### 5. Evaluation
 
-- [x] Move from in-memory state to persistent storage (Redis or SQLite).
-- [x] Implement Redis/SQLite backends by subclassing `storage.base.Store`.
-- Add deployment packaging and environment configuration.
-- Add background task support for long-running ingestion cycles.
-
-## Development Rules
-
-- Preserve deterministic behavior unless explicitly changing a scoring assumption.
-- Avoid adding framework weight where a configuration file is sufficient.
-- Keep human review as the terminal automated action.
-- Pipeline modules must not import FastAPI.
-- Update this roadmap, the spec, and the architecture doc before adding major features.
+- Add offline evaluation fixtures and metrics.
+- Measure alert precision/recall on labeled replay datasets.
+- Compare behavior across population tiers and low-sample regions.

@@ -1,619 +1,217 @@
 # API Reference
 
-Complete API documentation for AI4MH backend endpoints.
+This document matches the current FastAPI implementation in `backend/app/api/v1/routes`.
 
 ## Base URL
 
-```
-http://localhost:8000/api
+```text
+http://127.0.0.1:8000/api/v1
 ```
 
 ## Authentication
 
-Currently no authentication (would be added in Phase 2).
-All endpoints are public.
+No authentication is implemented.
 
-## Response Format
+## Response Model
 
-All responses are JSON with the following structure:
-
-```json
-{
-  "data": {...},
-  "status": "success|error",
-  "timestamp": "2024-03-17T12:00:00Z"
-}
-```
-
-Successful responses return HTTP 200 (or specific 201, 204).  
-Error responses return appropriate HTTP 4xx or 5xx status codes.
-
----
+Responses are direct JSON payloads. There is no envelope such as `{"data": ..., "status": ...}`.
 
 ## Endpoints
 
-### Posts
+### POST /ingest
 
-#### GET /api/posts
+Run one ingestion cycle.
 
-Retrieve recent posts with optional limit.
+Query parameters:
 
-**Parameters:**
-| Name | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| limit | integer | No | 60 | Number of posts to return |
+- `n` (`int`, optional, default `30`): number of synthetic posts to generate
 
-**Response:**
+Response:
+
+```json
+{
+  "total_posts": 125,
+  "regions_scored": 9,
+  "alerts": 2
+}
+```
+
+Example:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/api/v1/ingest?n=30"
+```
+
+### GET /posts
+
+Return recent enriched posts.
+
+Query parameters:
+
+- `limit` (`int`, optional, default `60`)
+
+Response shape:
+
 ```json
 {
   "posts": [
     {
-      "id": "post_123",
-      "text": "I am feeling overwhelmed",
-      "region_id": "AL",
-      "sentiment_compound": -0.7,
-      "crisis_keywords": 1,
-      "created_at": "2024-03-17T12:00:00Z"
+      "id": "post_123456",
+      "text": "life feels completely hopeless",
+      "subreddit": "depression",
+      "region_id": "CA-LA",
+      "region_name": "Los Angeles, CA",
+      "timestamp": "2026-03-30T08:00:00+00:00",
+      "upvotes": 120,
+      "comments": 12,
+      "is_bot": false,
+      "is_crisis_text": true,
+      "ground_truth_crisis": true,
+      "sentiment": -0.5095,
+      "keyword_count": 1,
+      "keyword_terms": ["hopeless"],
+      "nlp_crisis_flag": true,
+      "ai_correct": true
     }
   ],
-  "total": 150
+  "total": 125
 }
 ```
 
-**Status Codes:**
-- 200: Success
-- 400: Invalid limit parameter
-- 500: Server error
+Example:
 
-**Example:**
 ```bash
-curl http://localhost:8000/api/posts?limit=10
+curl "http://127.0.0.1:8000/api/v1/posts?limit=5"
 ```
 
----
+### GET /scores
 
-### Scores
+Return current region scores.
 
-#### GET /api/scores
+Response shape:
 
-Get regional crisis scores for all regions.
-
-**Parameters:** None
-
-**Response:**
 ```json
 {
   "scores": [
     {
-      "region_id": "AL",
-      "crisis_score": 0.82,
-      "confidence": 0.91,
-      "components": {
-        "sentiment": 0.75,
-        "volume": 0.88,
-        "geo_cluster": 0.80,
-        "trend": 0.70
-      },
-      "num_posts": 125,
-      "baseline_posts": 45,
-      "updated_at": "2024-03-17T12:30:00Z"
+      "region_id": "CA-LA",
+      "post_count": 18,
+      "bot_count": 1,
+      "bot_ratio": 0.0526,
+      "sentiment_intensity": 0.6111,
+      "volume_spike": 0.4938,
+      "geo_cluster": 0.5556,
+      "trend_accel": 0.6667,
+      "crisis_score": 0.5778,
+      "confidence": 0.0616,
+      "should_escalate": false,
+      "avg_sentiment": -0.1912
     }
   ],
-  "updated_at": "2024-03-17T12:30:00Z"
+  "updated_at": "2026-03-30T08:00:00+00:00"
 }
 ```
 
-**Status Codes:**
-- 200: Success
-- 500: Server error
+### GET /alerts
 
-**Example:**
-```bash
-curl http://localhost:8000/api/scores
-```
+Return active alert objects.
 
----
+Response shape:
 
-### Alerts
-
-#### GET /api/alerts
-
-List all alerts with optional filtering.
-
-**Parameters:**
-| Name | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| status | string | No | all | Filter by status (review_required, acknowledged, dismissed, resolved) |
-| region_id | string | No | all | Filter by region |
-| limit | integer | No | 50 | Number of alerts to return |
-
-**Response:**
 ```json
 {
   "alerts": [
     {
-      "id": "alert_456",
-      "region_id": "AL",
-      "crisis_score": 0.85,
-      "confidence": 0.92,
+      "id": "a3f2...",
+      "region": "CA-LA",
+      "score": 0.8123,
       "status": "review_required",
-      "evidence_post_ids": ["post_1", "post_2", "post_3"],
+      "confidence": 0.71,
+      "sample_size": 24,
+      "created_at": "2026-03-30T08:00:00+00:00",
+      "updated_at": "2026-03-30T08:00:00+00:00",
       "score_breakdown": {
-        "sentiment": 0.80,
-        "volume": 0.90,
-        "geo_cluster": 0.82,
-        "trend": 0.72
+        "sentiment_intensity": 0.7,
+        "volume_spike": 0.6,
+        "geo_cluster": 0.9,
+        "trend_accel": 0.8,
+        "bot_ratio": 0.1,
+        "confidence": 0.71
       },
-      "created_at": "2024-03-17T12:00:00Z",
-      "updated_at": "2024-03-17T12:00:00Z",
-      "acknowledged_at": null,
-      "resolved_at": null
+      "evidence_post_ids": ["post_1", "post_2"]
     }
-  ],
-  "total": 5
+  ]
 }
 ```
 
-**Status Codes:**
-- 200: Success
-- 400: Invalid status or region_id parameter
-- 500: Server error
+### POST /alerts/{alert_id}/ack
+### POST /alerts/{alert_id}/dismiss
+### POST /alerts/{alert_id}/resolve
 
-**Example:**
-```bash
-curl http://localhost:8000/api/alerts?status=review_required&region_id=AL
-```
+Transition an alert status.
 
----
+Response:
 
-#### POST /api/alerts/{id}/ack
-
-Acknowledge an alert (transition from review_required → acknowledged).
-
-**Parameters:**
-- `id` (path parameter): Alert ID
-
-**Request Body:**
-```json
-{
-  "notes": "Alert reviewed. Investigating further."
-}
-```
-
-**Response:**
 ```json
 {
   "alert": {
-    "id": "alert_456",
-    "status": "acknowledged",
-    "acknowledged_at": "2024-03-17T12:15:00Z",
-    "acknowledged_by": "operator_1",
-    "notes": "Alert reviewed. Investigating further."
+    "id": "a3f2...",
+    "status": "acknowledged"
   }
 }
 ```
 
-**Status Codes:**
-- 200: Success
-- 404: Alert not found
-- 409: Alert not in review_required state
-- 500: Server error
+Failure:
 
-**Example:**
+- `404` if the alert does not exist
+
+Examples:
+
 ```bash
-curl -X POST http://localhost:8000/api/alerts/alert_456/ack \
-  -H "Content-Type: application/json" \
-  -d '{"notes": "Investigating"}'
+curl -X POST "http://127.0.0.1:8000/api/v1/alerts/<alert-id>/ack"
+curl -X POST "http://127.0.0.1:8000/api/v1/alerts/<alert-id>/dismiss"
+curl -X POST "http://127.0.0.1:8000/api/v1/alerts/<alert-id>/resolve"
 ```
 
----
+### GET /logs
 
-#### POST /api/alerts/{id}/dismiss
+Return recent log events.
 
-Dismiss an alert (transition from review_required → dismissed).
+Query parameters:
 
-**Parameters:**
-- `id` (path parameter): Alert ID
+- `limit` (`int`, optional, default `100`)
 
-**Request Body:**
-```json
-{
-  "reason": "False positive - unrelated discussion spike",
-  "notes": "Media coverage about similar issue"
-}
-```
+Response shape:
 
-**Response:**
-```json
-{
-  "alert": {
-    "id": "alert_456",
-    "status": "dismissed",
-    "dismissed_at": "2024-03-17T12:20:00Z",
-    "reason": "False positive - unrelated discussion spike"
-  }
-}
-```
-
-**Status Codes:**
-- 200: Success
-- 404: Alert not found
-- 409: Alert not in review_required state
-- 500: Server error
-
-**Example:**
-```bash
-curl -X POST http://localhost:8000/api/alerts/alert_456/dismiss \
-  -H "Content-Type: application/json" \
-  -d '{"reason": "False positive", "notes": "Media coverage"}'
-```
-
----
-
-#### POST /api/alerts/{id}/resolve
-
-Resolve an alert (transition from acknowledged → resolved).
-
-**Parameters:**
-- `id` (path parameter): Alert ID
-
-**Request Body:**
-```json
-{
-  "outcome": "Crisis identified and addressed",
-  "actions_taken": "Contacted regional mental health center"
-}
-```
-
-**Response:**
-```json
-{
-  "alert": {
-    "id": "alert_456",
-    "status": "resolved",
-    "resolved_at": "2024-03-17T12:45:00Z",
-    "outcome": "Crisis identified and addressed",
-    "actions_taken": "Contacted regional mental health center"
-  }
-}
-```
-
-**Status Codes:**
-- 200: Success
-- 404: Alert not found
-- 409: Alert not in acknowledged state
-- 500: Server error
-
-**Example:**
-```bash
-curl -X POST http://localhost:8000/api/alerts/alert_456/resolve \
-  -H "Content-Type: application/json" \
-  -d '{"outcome": "Resolved", "actions_taken": "Contacted center"}'
-```
-
----
-
-### Logs
-
-#### GET /api/logs
-
-Retrieve audit logs for system events.
-
-**Parameters:**
-| Name | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| event | string | No | all | Filter by event type |
-| limit | integer | No | 20 | Number of log entries to return |
-| offset | integer | No | 0 | Pagination offset |
-
-**Response:**
 ```json
 {
   "logs": [
     {
-      "id": "log_789",
+      "timestamp": "2026-03-30T08:00:00+00:00",
       "event": "ingest_completed",
-      "timestamp": "2024-03-17T12:30:00Z",
       "payload": {
         "n": 30,
-        "total_posts": 1250,
-        "regions": 5
-      }
-    },
-    {
-      "id": "log_788",
-      "event": "alert_acknowledged",
-      "timestamp": "2024-03-17T12:15:00Z",
-      "payload": {
-        "alert_id": "alert_456",
-        "region": "AL",
-        "crisis_score": 0.85
+        "total_posts": 125,
+        "regions": 9
       }
     }
-  ],
-  "total": 245
+  ]
 }
 ```
 
-**Event Types:**
-- `ingest_completed` - Data ingestion cycle completed
-- `ingest_error` - Error during ingestion
-- `alert_escalated` - Alert generated and marked as review_required
-- `alert_acknowledged` - Alert acknowledged by operator
-- `alert_dismissed` - Alert dismissed by operator
-- `alert_resolved` - Alert resolved by operator
+### GET /bias
 
-**Status Codes:**
-- 200: Success
-- 400: Invalid event type or limit
-- 500: Server error
+Return bias-monitoring diagnostics by population tier and by region.
 
-**Example:**
-```bash
-curl http://localhost:8000/api/logs?event=alert_escalated&limit=10
-```
+Response fields:
 
----
+- `by_tier`: aggregated diagnostics grouped into `rural`, `suburban`, `urban`
+- `by_region`: per-region diagnostics
+- `notes`: operator guidance strings
+- `as_of`: timestamp added by the route handler
 
-### Bias Diagnostics
-
-#### GET /api/bias
-
-Get bias diagnostics for data quality assessment.
-
-**Parameters:** None
-
-**Response:**
-```json
-{
-  "by_tier": {
-    "rural": {
-      "regions": 2,
-      "avg_posts": 8,
-      "warning": "Low sample size (N=8) - use with caution"
-    },
-    "suburban": {
-      "regions": 5,
-      "avg_posts": 45,
-      "warning": null
-    },
-    "urban": {
-      "regions": 3,
-      "avg_posts": 250,
-      "warning": null
-    }
-  },
-  "by_region": [
-    {
-      "region_id": "AL_rural_1",
-      "population_tier": "rural",
-      "posts": 5,
-      "confidence": 0.45,
-      "bot_ratio": 0.2,
-      "recommendation": "Increase confidence threshold for this region"
-    }
-  ],
-  "global_stats": {
-    "total_posts": 1250,
-    "low_sample_regions": 2,
-    "high_bot_regions": 1
-  }
-}
-```
-
-**Status Codes:**
-- 200: Success
-- 500: Server error
-
-**Example:**
-```bash
-curl http://localhost:8000/api/bias
-```
-
----
-
-## Error Handling
-
-### Error Response Format
-
-```json
-{
-  "detail": "Error message describing what went wrong",
-  "status": 400
-}
-```
-
-### Common Errors
-
-| Status | Message | Cause |
-|--------|---------|-------|
-| 400 | Bad Request | Invalid parameters or request body |
-| 404 | Not Found | Resource (alert, post) doesn't exist |
-| 409 | Conflict | Invalid state transition (e.g., resolve dismissed alert) |
-| 500 | Internal Server Error | Unexpected server error |
-
----
-
-## Rate Limiting
-
-Currently no rate limiting implemented.
-Can be added in Phase 2:
-
-```python
-from slowapi import Limiter
-limiter = Limiter(key_func=get_remote_address)
-
-@app.get("/api/posts")
-@limiter.limit("100/minute")
-def get_posts():
-    ...
-```
-
----
-
-## Pagination
-
-Use `limit` and `offset` parameters for large result sets:
+Example:
 
 ```bash
-# Get first 20 items
-curl http://localhost:8000/api/posts?limit=20&offset=0
-
-# Get next 20 items
-curl http://localhost:8000/api/posts?limit=20&offset=20
+curl "http://127.0.0.1:8000/api/v1/bias"
 ```
-
----
-
-## Filtering
-
-### By Status
-```bash
-curl http://localhost:8000/api/alerts?status=review_required
-```
-
-### By Region
-```bash
-curl http://localhost:8000/api/alerts?region_id=AL
-```
-
-### Combined
-```bash
-curl http://localhost:8000/api/alerts?status=acknowledged&region_id=GA
-```
-
----
-
-## Testing Endpoints
-
-### Using curl
-
-```bash
-# Test backend health
-curl -i http://localhost:8000/api/posts
-
-# Test with jq for pretty JSON
-curl -s http://localhost:8000/api/scores | jq '.'
-
-# POST request
-curl -X POST http://localhost:8000/api/alerts/alert_456/ack \
-  -H "Content-Type: application/json" \
-  -d '{"notes": "Reviewing"}'
-```
-
-### Using Python
-
-```python
-import requests
-
-# Get posts
-response = requests.get('http://localhost:8000/api/posts?limit=5')
-posts = response.json()['posts']
-
-# Get scores
-scores = requests.get('http://localhost:8000/api/scores').json()['scores']
-
-# Acknowledge alert
-requests.post(
-    'http://localhost:8000/api/alerts/alert_456/ack',
-    json={"notes": "Reviewing..."}
-)
-```
-
-### Using JavaScript/Fetch
-
-```javascript
-// Get posts
-fetch('http://localhost:8000/api/posts?limit=5')
-  .then(r => r.json())
-  .then(data => console.log(data.posts));
-
-// Acknowledge alert
-fetch('http://localhost:8000/api/alerts/alert_456/ack', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ notes: 'Reviewing' })
-})
-  .then(r => r.json())
-  .then(data => console.log(data));
-```
-
----
-
-## OpenAPI/Swagger
-
-Interactive API documentation available at:
-
-```
-http://localhost:8000/docs
-```
-
-Alternative (ReDoc):
-```
-http://localhost:8000/redoc
-```
-
----
-
-## Versioning
-
-Current API version: `v1`  
-No version prefix currently used in endpoints.
-
-For future versions, use:
-```
-/api/v2/posts
-/api/v2/scores
-```
-
----
-
-## CORS
-
-The following origins are allowed:
-- `http://localhost:3000`
-- `http://localhost:5173`
-
-Add more in `backend/main.py`:
-```python
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["https://yourdomain.com"],
-    ...
-)
-```
-
----
-
-## Metrics & Monitoring
-
-### Response Times
-
-Typical response times:
-- GET endpoints: 50-100ms
-- POST endpoints: 100-200ms
-- Complex queries (bias): 200-500ms
-
-### Load Testing
-
-```bash
-# Using Apache Bench
-ab -n 1000 -c 10 http://localhost:8000/api/posts
-
-# Using wrk
-wrk -t4 -c100 -d30s http://localhost:8000/api/posts
-```
-
----
-
-## Support & Issues
-
-For API issues:
-1. Check [SUBMISSION/docs/GOVERNANCE.md](GOVERNANCE.md) for governance questions
-2. Review error logs: `docker logs ai4mh-backend`
-3. Consult [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md) for design questions
-
----
-
-**API Reference Last Updated:** March 17, 2026  
-**Status:** Production Ready ✅

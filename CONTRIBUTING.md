@@ -1,173 +1,99 @@
 # Contributing to AI4MH
 
-Thank you for your interest in contributing to AI4MH! This document provides guidelines and instructions for contributing to the project.
+## Prerequisites
 
-## Code of Conduct
-
-AI4MH is committed to providing a safe and welcoming environment for all contributors. Please treat all participants with respect and courtesy.
-
-## Getting Started
-
-### Prerequisites
 - Python 3.10+
-- Node.js 16+
+- Node.js 18+
 - Git
 
-### Development Setup
+## Local Setup
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/yourusername/AI4MH.git
-   cd AI4MH
-   ```
+```bash
+git clone https://github.com/fallofpheonix/AI4MH.git
+cd AI4MH
 
-2. **Set up the backend environment:**
-   ```bash
-   cd backend
-   python -m venv .venv312
-   source .venv312/bin/activate  # On Windows: .venv312\Scripts\activate
-   pip install -r requirements.txt
-   ```
+cd backend
+python3 -m venv .venv312
+source .venv312/bin/activate
+python -m pip install -r requirements.txt
 
-3. **Set up the frontend environment:**
-   ```bash
-   cd ../frontend
-   npm install
-   ```
+cd ../frontend
+npm install
+```
 
-## Running the Project
+## Run Locally
 
-### Start the backend server:
+Backend:
+
 ```bash
 cd backend
 source .venv312/bin/activate
 uvicorn main:app --reload
 ```
 
-The API will be available at `http://localhost:8000`
+Frontend:
 
-### Start the frontend development server:
 ```bash
 cd frontend
 npm run dev
 ```
 
-The dashboard will be available at `http://localhost:5173`
+Runtime URLs:
 
-## Running Tests
+- API docs: `http://127.0.0.1:8000/docs`
+- API base: `http://127.0.0.1:8000/api/v1`
+- Dashboard: `http://127.0.0.1:5173`
 
-### Backend tests:
+## Validation Before PR
+
 ```bash
 cd backend
-python -m pytest tests/ -v
-```
+./.venv312/bin/python -m pytest
 
-### Health check (full stack validation):
-```bash
+cd ../frontend
+npm run build
+
+cd ..
 bash scripts/full_health_check.sh
 ```
 
+## Repository Conventions
+
+### Backend
+
+- Keep API handlers thin.
+- Put orchestration and business logic in `backend/app/services`.
+- Put persistence contracts and implementations in `backend/app/crud`.
+- Put typed payload models in `backend/app/schemas`.
+- Put runtime settings and application wiring in `backend/app/core`.
+
+### Frontend
+
+- Keep page composition in `frontend/src/pages`.
+- Keep stateful orchestration in `frontend/src/hooks`.
+- Keep network code in `frontend/src/services`.
+- Keep reusable UI in `frontend/src/components/common` and `frontend/src/components/layout`.
+- Keep domain-specific UI in `frontend/src/components/features`.
+- Use `@` imports for `frontend/src/*`.
+
+## Documentation Rules
+
+Update documentation when changing:
+
+- API routes or payloads
+- environment variables
+- repository layout
+- verification or deployment steps
+
+Minimum files to consider:
+
+- `README.md`
+- `docs/ARCHITECTURE.md`
+- `SUBMISSION/*.md`
+- `SUBMISSION/docs/*.md`
+
 ## Commit Guidelines
 
-- Use descriptive commit messages
-- Reference issue numbers when applicable (e.g., "Fix #123")
-- Keep commits focused on a single concern
-- Follow conventional commit format when possible: `type(scope): description`
-
-## Pull Request Process
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes and commit them (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request with a clear description of changes
-
-### PR Checklist:
-- [ ] Tests pass locally (`pytest` for backend)
-- [ ] Health check passes (`bash scripts/full_health_check.sh`)
-- [ ] Documentation is updated if needed
-- [ ] Commit messages are clear and descriptive
-- [ ] No new warnings or errors introduced
-
-## Development Guidelines
-
-### Code Style
-
-**Python:**
-- Follow PEP 8
-- Use type hints where practical
-- Keep functions focused and under 100 lines
-- Write docstrings for public functions
-
-**JavaScript/React:**
-- Use descriptive variable and function names
-- Keep components focused and reusable
-- Comment complex logic
-
-### Architecture Principles
-
-- **Modular Design**: Keep pipeline stages independent
-- **Testability**: Write testable code with clear inputs/outputs
-- **Documentation**: Update docs when changing functionality
-- **No Framework Bloat**: Pipeline modules must not import FastAPI
-- **Determinism**: Ensure reproducible results for fixed inputs
-
-## Testing
-
-All new features should include tests:
-
-### Backend:
-- Unit tests for scoring functions in `tests/test_scoring.py`
-- Integration tests for API endpoints in `tests/test_api.py`
-- Fixtures in `tests/conftest.py`
-
-Run tests with coverage:
-```bash
-pytest tests/ -v --cov=backend
-```
-
-## Documentation
-
-### When to Update Docs:
-- Adding new features
-- Changing API endpoints
-- Modifying configuration options
-- Updating dependencies
-
-### Files to Update:
-- `README.md` - Overview and setup
-- `docs/ARCHITECTURE.md` - System architecture
-- `docs/PROJECT_SPEC.md` - Requirements and constraints
-- `docs/ROADMAP.md` - Development priorities
-- Inline code comments for complex logic
-
-## Issue Reporting
-
-When reporting bugs, please include:
-- Python and Node.js versions
-- Operating system
-- Steps to reproduce
-- Expected vs actual behavior
-- Error messages and stack traces
-
-## Feature Requests
-
-When proposing features:
-- Describe the use case and benefit
-- Explain the proposed implementation
-- Consider backward compatibility
-- Reference related issues or requirements
-
-## Contact
-
-For questions or discussions:
-- Open an issue on GitHub
-- Email: human-ai@cern.ch
-
-## Licensing
-
-By contributing to this project, you agree that your contributions will be licensed under the MIT License.
-
----
-
-Thank you for contributing to AI4MH! 🎉
+- Keep commits scoped to one concern.
+- Use descriptive messages.
+- Do not mix structural refactors with unrelated logic changes unless necessary to keep the tree buildable.

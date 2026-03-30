@@ -1,281 +1,132 @@
 # Installation Guide
 
-Complete step-by-step instructions to set up AI4MH for development or evaluation.
+This guide covers local setup for development, evaluation, and verification.
 
-## Prerequisites
+## Requirements
 
-### System Requirements
-- macOS, Linux, or Windows (with WSL2)
-- 4GB RAM minimum
-- 2GB disk space
+- Python 3.10 or newer
+- Node.js 18 or newer
+- npm
+- Git
 
-### Required Software
-- **Python**: 3.10 or higher
-- **Node.js**: 16 or higher
-- **npm**: 8 or higher
-- **Git**: For version control
-
-### Verify Prerequisites
+## Repository Setup
 
 ```bash
-python3 --version    # Should show 3.10+
-node --version       # Should show 16+
-npm --version        # Should show 8+
-git --version        # Should show 2.x+
-```
-
-## Installation Steps
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/yourusername/AI4MH.git
+git clone https://github.com/fallofpheonix/AI4MH.git
 cd AI4MH
 ```
 
-### 2. Backend Setup
-
-#### Option A: Using Virtual Environment (Recommended)
+## Backend Setup
 
 ```bash
 cd backend
-
-# Create virtual environment
 python3 -m venv .venv312
-
-# Activate virtual environment
-source .venv312/bin/activate    # macOS/Linux
-# or
-.venv312\Scripts\activate       # Windows
-
-# Upgrade pip
-pip install --upgrade pip
-
-# Install dependencies
-pip install -r requirements.txt
+source .venv312/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+cp .env.example .env
 ```
 
-#### Option B: Using Conda
+Sanity check:
 
 ```bash
-cd backend
+./.venv312/bin/python - <<'PY'
+from app.main import create_app
+from app.core.config import settings
 
-# Create conda environment
-conda create -n ai4mh python=3.12
-conda activate ai4mh
-
-# Install dependencies
-pip install -r requirements.txt
+app = create_app()
+print(app.title)
+print(settings.api_prefix)
+print(settings.sqlite_path)
+PY
 ```
 
-### 3. Frontend Setup
+## Frontend Setup
 
 ```bash
 cd frontend
-
-# Install Node dependencies
 npm install
-
-# Verify installation
-npm list react vue
+npm run build
 ```
 
-### 4. Verify Installation
+## Running Locally
+
+Backend:
 
 ```bash
-# Test backend imports
 cd backend
-python3 -c "from main import app; print('✓ Backend OK')"
-
-# Test frontend setup
-cd ../frontend
-npm run build --dry-run && echo "✓ Frontend OK"
+source .venv312/bin/activate
+uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
+
+Frontend:
+
+```bash
+cd frontend
+npm run dev -- --host 127.0.0.1 --port 5173
+```
+
+## Runtime URLs
+
+- Backend docs: `http://127.0.0.1:8000/docs`
+- Versioned API: `http://127.0.0.1:8000/api/v1`
+- Frontend dashboard: `http://127.0.0.1:5173`
 
 ## Configuration
 
-### Backend Configuration
+Primary settings live in `backend/app/core/config.py`.
 
-All settings are in `backend/config.py`. Override with environment variables:
-
-```bash
-# Example: Override alert threshold
-export AI4MH_ALERT_THRESHOLD=0.75
-export AI4MH_MAX_POSTS=500
-export AI4MH_CONFIDENCE_THRESHOLD=0.65
-```
-
-### Available Configuration Options
-
-```python
-# Alert generation
-AI4MH_ALERT_THRESHOLD=0.80        # Score threshold for alerts
-AI4MH_CONFIDENCE_THRESHOLD=0.70   # Confidence threshold
-
-# Scoring weights (must sum to 1.0)
-AI4MH_WEIGHT_SENTIMENT=0.40
-AI4MH_WEIGHT_VOLUME=0.35
-AI4MH_WEIGHT_GEO=0.15
-AI4MH_WEIGHT_TREND=0.10
-
-# Data processing
-AI4MH_MAX_POSTS=1000              # Maximum posts to keep
-AI4MH_MIN_REGION_SAMPLE=10        # Minimum samples for region
-
-# Storage
-AI4MH_DB_PATH=ai4mh.db            # SQLite database location
-```
-
-## Running the Application
-
-### Start Backend
+Common environment variables:
 
 ```bash
-cd backend
-source .venv312/bin/activate  # Activate venv
-python -m uvicorn main:app --host 127.0.0.1 --port 8000
+AI4MH_API_PREFIX=/api
+AI4MH_ALERT_THRESHOLD=0.75
+AI4MH_MAX_POSTS=500
+AI4MH_DEFAULT_INGEST_BATCH_SIZE=30
+AI4MH_BOOTSTRAP_BATCH_SIZE=120
+AI4MH_SQLITE_PATH=ai4mh.db
+AI4MH_ALLOWED_ORIGINS='["http://localhost:3000","http://localhost:4173","http://localhost:5173","http://127.0.0.1:3000","http://127.0.0.1:4173","http://127.0.0.1:5173"]'
 ```
 
-Expected output:
-```
-INFO:     Uvicorn running on http://127.0.0.1:8000
-```
-
-### Start Frontend (in a new terminal)
+Advanced overrides use JSON strings:
 
 ```bash
-cd frontend
-npm run dev
+AI4MH_WEIGHTS='{"sentiment":0.35,"volume":0.30,"geo_cluster":0.20,"trend":0.15}'
+AI4MH_ESCALATION_THRESHOLDS='{"crisis_score":0.70,"confidence":0.60,"min_posts":10,"max_bot_ratio":0.25}'
 ```
-
-Expected output:
-```
-VITE v... ready in ... ms
-➜  Local:   http://127.0.0.1:5173/
-```
-
-### Access the Application
-
-- **API Dashboard**: http://localhost:8000/docs
-- **Monitoring Dashboard**: http://localhost:5173
-- **API Base URL**: http://localhost:8000/api
 
 ## Troubleshooting
 
-### Issue: "ModuleNotFoundError: No module named 'fastapi'"
+### FastAPI import errors
 
-**Solution:**
 ```bash
 cd backend
 source .venv312/bin/activate
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
-### Issue: "npm command not found"
+### Frontend cannot reach backend
 
-**Solution:**
-```bash
-# Install Node.js via Homebrew (macOS)
-brew install node
+- Verify backend is listening on `127.0.0.1:8000`
+- Verify the frontend uses `VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1` or `http://localhost:8000/api/v1`
+- Check `AI4MH_ALLOWED_ORIGINS` if you changed host or port
 
-# Or download from https://nodejs.org/
-```
-
-### Issue: "Port 8000 already in use"
-
-**Solution:**
-```bash
-# Find process
-lsof -i :8000
-
-# Kill process
-kill -9 <PID>
-
-# Or use different port
-python -m uvicorn main:app --port 8001
-```
-
-### Issue: "Port 5173 already in use"
-
-**Solution:**
-```bash
-# Kill process or use different port
-npm run dev -- --port 5174
-```
-
-### Issue: "Permission denied" on .venv312/bin/activate
-
-**Solution:**
-```bash
-chmod +x .venv312/bin/activate
-source .venv312/bin/activate
-```
-
-### Issue: "CORS error" when accessing API
-
-**Solution:**
-- Verify backend is running on port 8000
-- Check CORS configuration in `backend/main.py`
-- Clear browser cache (Ctrl+Shift+Delete)
-
-## Database
-
-### SQLite Setup
-
-The application uses SQLite with WAL mode for data persistence.
-
-```bash
-# Database is automatically created at backend/ai4mh.db
-# No additional setup required
-
-# To reset database:
-cd backend
-rm ai4mh.db
-```
-
-### Database Location
-
-- **Default**: `backend/ai4mh.db`
-- **Custom**: Set `AI4MH_DB_PATH` environment variable
-
-## Testing Installation
-
-### Run Backend Tests
+### Reset local SQLite state
 
 ```bash
 cd backend
-python -m pytest tests/ -v
+rm -f ai4mh.db ai4mh.db-shm ai4mh.db-wal
 ```
 
-Expected: 27 tests passing
-
-### Run Full Health Check
+## Post-Install Validation
 
 ```bash
+cd backend
+./.venv312/bin/python -m pytest
+
+cd ../frontend
+npm run build
+
+cd ..
 bash scripts/full_health_check.sh
 ```
-
-Expected: All checks passing ✓
-
-## Next Steps
-
-1. **Verify Installation**: See [VERIFICATION.md](SUBMISSION/VERIFICATION.md)
-2. **Run Tests**: See [TESTING.md](SUBMISSION/TESTING.md)
-3. **Understand Architecture**: See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-4. **Try the Dashboard**: Open http://localhost:5173
-
-## Docker Setup (Optional)
-
-If you prefer to run with Docker:
-
-```bash
-docker-compose -f SUBMISSION/deployment/docker-compose.yml up
-```
-
-See [DEPLOYMENT.md](SUBMISSION/DEPLOYMENT.md) for details.
-
----
-
-**Installation completed successfully!** 🎉
-
-You can now proceed to [VERIFICATION.md](SUBMISSION/VERIFICATION.md) to validate your setup.
