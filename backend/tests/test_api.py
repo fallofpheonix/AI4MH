@@ -2,7 +2,7 @@ from __future__ import annotations
 
 
 def test_ingest_returns_operational_summary(client):
-    response = client.post("/api/ingest?n=12")
+    response = client.post("/api/v1/ingest?n=12")
 
     assert response.status_code == 200
     payload = response.json()
@@ -11,13 +11,13 @@ def test_ingest_returns_operational_summary(client):
 
 
 def test_monitoring_endpoints_return_expected_shapes(client):
-    client.post("/api/ingest?n=12")
+    client.post("/api/v1/ingest?n=12")
 
-    posts = client.get("/api/posts?limit=5")
-    scores = client.get("/api/scores")
-    alerts = client.get("/api/alerts")
-    logs = client.get("/api/logs?limit=10")
-    bias = client.get("/api/bias")
+    posts = client.get("/api/v1/posts?limit=5")
+    scores = client.get("/api/v1/scores")
+    alerts = client.get("/api/v1/alerts")
+    logs = client.get("/api/v1/logs?limit=10")
+    bias = client.get("/api/v1/bias")
 
     assert posts.status_code == 200
     assert isinstance(posts.json()["posts"], list)
@@ -28,15 +28,15 @@ def test_monitoring_endpoints_return_expected_shapes(client):
 
 
 def test_alert_lifecycle_writes_log_entry(client, seeded_alert):
-    response = client.post(f"/api/alerts/{seeded_alert.id}/ack")
+    response = client.post(f"/api/v1/alerts/{seeded_alert.id}/ack")
 
     assert response.status_code == 200
     assert response.json()["alert"]["status"] == "acknowledged"
 
-    logs = client.get("/api/logs?limit=20").json()["logs"]
+    logs = client.get("/api/v1/logs?limit=20").json()["logs"]
     assert any(entry["event"] == "alert_status_changed" for entry in logs)
 
 
 def test_unknown_alert_returns_404(client):
-    response = client.post("/api/alerts/missing-alert/resolve")
+    response = client.post("/api/v1/alerts/missing-alert/resolve")
     assert response.status_code == 404

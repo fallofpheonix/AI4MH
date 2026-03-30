@@ -1,183 +1,120 @@
 # AI4MH Architecture
 
-## High-Level Data Flow
+## Data Flow
 
 ```text
-Synthetic or replayed posts
-  -> NLP enrichment          (pipeline/enrich.py)
-  -> region grouping         (pipeline/aggregate.py)
-  -> crisis scoring          (pipeline/score.py)
-  -> confidence estimation   (pipeline/score.py)
-  -> escalation gate         (pipeline/score.py)
-  -> alert generation        (pipeline/alert.py)
-  -> alerts, logs, API       (main.py)
-  -> frontend monitor        (frontend/src/App.jsx)
+Synthetic posts
+  -> app/services/ingestion_service.py
+  -> app/services/enrichment_service.py
+  -> app/services/scoring_service.py
+  -> app/services/alert_service.py
+  -> app/crud/sqlite.py
+  -> app/api/v1/routes/*
+  -> frontend/src/services/dashboardService.js
+  -> frontend/src/pages/DashboardPage.jsx
 ```
 
-## Backend Structure
+## Backend Layout
 
-```
+```text
 backend/
-    config.py              # Pydantic Settings — all tunable constants
-    main.py                # FastAPI routes only; delegates to pipeline/storage
-    pipeline/
-        ingest.py          # Synthetic post generation
-        enrich.py          # VADER sentiment + crisis keyword detection
-        aggregate.py       # Region grouping and global baseline
-        score.py           # Crisis scoring engine
-        alert.py           # Alert generation and lifecycle transitions
-    storage/
-        base.py            # Abstract Store interface
-        memory.py          # In-memory Store implementation
-        sqlite.py          # Persistent SQLite Store implementation (WAL mode)
-    models/
-        post.py            # RawPost, EnrichedPost
-        score.py           # RegionScore
-        alert.py           # Alert, LogEvent
-    evaluation/
-        metrics.py         # Precision, recall, F1, FPR
-    lexicons/
-        crisis_terms_v1.json  # Crisis keyword list
-    tests/
-        conftest.py        # Shared pytest fixtures
-        test_scoring.py    # Unit tests for scoring functions
-        test_api.py        # Integration tests for API endpoints
+  app/
+    api/
+      dependencies.py        FastAPI dependency wiring
+      router.py              top-level API router
+      v1/
+        router.py            v1 router aggregation
+        routes/              ingest, monitoring, alert handlers
+    core/
+      config.py              Pydantic settings and env parsing
+      container.py           application service container
+      db.py                  store factory and DB wiring
+    crud/
+      base.py                abstract persistence contract
+      memory.py              in-memory test store
+      sqlite.py              SQLite-backed store
+    schemas/
+      post.py                RawPost, EnrichedPost
+      score.py               RegionScore
+      alert.py               Alert, LogEvent
+    services/
+      ingestion_service.py   synthetic dataset generation
+      enrichment_service.py  sentiment and keyword enrichment
+      scoring_service.py     region scoring engine
+      alert_service.py       alert lifecycle management
+      pipeline_service.py    end-to-end orchestration
+    utils/
+      population.py          population tier helper
+  tests/
+    conftest.py
+    test_api.py
+    test_scoring.py
 ```
 
-## Module Responsibilities
+## Frontend Layout
 
-### `config.py`
-
-- Pydantic `Settings` class with `AI4MH_` env-var prefix.
-- Holds `ALERT_THRESHOLD`, `MAX_POSTS`, `WEIGHTS`, `ESCALATION_THRESHOLDS`,
-  and `CRISIS_TERMS` (loaded from the lexicon file).
-- All pipeline modules import `settings` from here.
-
-### `main.py`
-
-- FastAPI entrypoint — routes only, no pipeline logic.
-- Instantiates one `Store` (default: `SQLiteStore`) for the process lifetime.
-- Delegates all work to pipeline functions and the store.
-- Alert lifecycle endpoints: `POST /api/alerts/{id}/ack|dismiss|resolve`.
-
-### `pipeline/ingest.py`
-
-- `generate_post()` → single synthetic `RawPost`.
-- `generate_dataset(n)` → list of `RawPost` objects.
-- Swap with a real PRAW call for production.
-
-### `pipeline/enrich.py`
-
-- `enrich_post(post)` → `EnrichedPost` with VADER sentiment and keyword flags.
-- `enrich_batch(posts)` → list of `EnrichedPost`; skips erroring posts.
-
-### `pipeline/aggregate.py`
-
-- `group_by_region(posts)` → `{region_id: [EnrichedPost]}`.
-- `compute_global_avg(groups)` → mean posts-per-region baseline.
-
-### `pipeline/score.py`
-
-- Signal functions: `_sentiment_intensity`, `_volume_spike`,
-  `_geo_cluster`, `_trend_acceleration`, `_confidence`.
-- `score_region(region_id, posts, global_avg)` → `RegionScore | None`.
-- `score_all_regions(posts, affected_regions, existing_scores)` →
-  sorted list of `RegionScore`; supports partial region updates.
-
-### `pipeline/alert.py`
-
-- `generate_alerts(scores, existing_alerts, region_posts)` →
-  `(alerts, log_events)`.
-- Preserves lifecycle state (`acknowledged`, `dismissed`, `resolved`)
-  across ingest cycles.
-
-### `storage/base.py`
-
-- Abstract `Store` interface: `save_posts`, `get_posts`, `save_scores`,
-  `get_scores`, `save_alerts`, `get_alerts`, `get_alert`, `update_alert`,
-  `append_log`, `get_logs`.
-
-### `storage/memory.py`
-
-- Thread-safe in-memory implementation of `Store`.
-- Replace with Redis or SQLite by implementing the same interface.
-
-### `models/`
-
-- `RawPost`, `EnrichedPost` — post lifecycle.
-- `RegionScore` — crisis score snapshot per region.
-- `Alert` — lifecycle-managed alert with evidence and scoring breakdown.
-- `LogEvent` — append-only log entry.
-
-### `evaluation/metrics.py`
-
-- `compute_classification_metrics(posts)` → dict with `tp`, `fp`, `fn`,
-  `tn`, `precision`, `recall`, `f1`, `fpr`.
-
-## Alert Lifecycle
-
-```
-review_required  →  acknowledged  →  resolved
-                 →  dismissed
+```text
+frontend/
+  src/
+    components/
+      common/                small reusable UI primitives
+      layout/                app shell composition
+      features/              alert and monitoring widgets
+    hooks/
+      useDashboardData.js    polling, ingest, snapshot state
+    pages/
+      DashboardPage.jsx      page composition
+    services/
+      apiClient.js           base HTTP client
+      dashboardService.js    dashboard-specific queries
+    styles/
+      global.css             global theme and layout rules
+    utils/
+      score.js               score formatting and coloring
 ```
 
-State transitions are recorded in the append-only log.
+## API Surface
 
-## API Contract
+- Base prefix: `/api`
+- Current version: `/v1`
+- Effective endpoints: `/api/v1/*`
 
-### `POST /api/ingest?n=30`
+### Monitoring
 
-Runs one pipeline cycle for *n* new posts.
-Returns `total_posts`, `regions_scored`, `alerts`.
+- `GET /api/v1/posts?limit=60`
+- `GET /api/v1/scores`
+- `GET /api/v1/alerts`
+- `GET /api/v1/logs?limit=100`
+- `GET /api/v1/bias`
 
-### `GET /api/posts?limit=60`
+### Pipeline Control
 
-Returns recent enriched posts.
+- `POST /api/v1/ingest?n=30`
 
-### `GET /api/scores`
+### Alert Lifecycle
 
-Returns current region score snapshots, sorted by crisis_score descending.
+- `POST /api/v1/alerts/{id}/ack`
+- `POST /api/v1/alerts/{id}/dismiss`
+- `POST /api/v1/alerts/{id}/resolve`
 
-### `GET /api/alerts`
+## Invariants
 
-Returns the current alert list with lifecycle state.
+- API handlers stay thin; orchestration lives in `services`.
+- Persistence depends on the `crud.Store` interface, not on route handlers.
+- Domain payloads are defined in `schemas` and reused across services and storage.
+- SQLite remains append/update-oriented JSON storage; no ORM layer exists yet.
+- Frontend data access is isolated under `src/services`; page state lives in hooks.
 
-### `POST /api/alerts/{id}/ack`
-### `POST /api/alerts/{id}/dismiss`
-### `POST /api/alerts/{id}/resolve`
+## Constraints
 
-Lifecycle transitions for a specific alert.
+- Time complexity per ingest cycle remains dominated by scoring over stored posts: `O(P + R log R)` for posts `P` and scored regions `R`.
+- Memory in `MemoryStore` is bounded by `max_posts`.
+- `SQLiteStore` serializes writes with a process-local lock and uses WAL mode.
+- No auth/security subsystem exists yet; adding one should land in `app/core/security.py` or a dedicated auth package when requirements exist.
 
-### `GET /api/logs?limit=100`
+## Failure Considerations
 
-Returns recent append-only log events.
-
-### `GET /api/bias`
-
-Returns population-tier and per-region diagnostics for skew monitoring.
-
-## Configuration
-
-All constants are tunable via environment variables with the `AI4MH_` prefix:
-
-| Variable                    | Default | Description                           |
-|-----------------------------|---------|---------------------------------------|
-| `AI4MH_ALERT_THRESHOLD`     | 0.75    | Minimum crisis_score for an alert     |
-| `AI4MH_MAX_POSTS`           | 500     | Post cap in the in-memory store       |
-
-Weights and escalation thresholds are set in `config.py` and can be
-overridden by providing JSON-encoded values via the matching env variables.
-
-## Performance Characteristics
-
-- Partial region updates: only affected regions are rescored after each
-  ingest, reducing work from O(all regions × posts) to O(new regions × posts).
-- In-memory storage is capped at `MAX_POSTS` (default 500).
-- Thread safety is enforced via a `threading.Lock` in `MemoryStore`.
-
-## Failure Model
-
-- Backend unavailable: frontend shows connection error.
-- Sparse data: score exists with low confidence; bias endpoint exposes this.
-- High bot ratio: confidence drops and escalation becomes less likely.
-- Enrichment failures: post is skipped and an error is logged; pipeline continues.
+- Backend unavailable: frontend shows a transport error banner.
+- Enrichment failure: post is dropped, pipeline continues.
+- All-bot region: scoring returns `None` for that region.
+- Unknown alert transition: API returns HTTP 404.

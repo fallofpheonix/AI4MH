@@ -26,7 +26,16 @@ class Settings(BaseSettings):
     default_ingest_batch_size: int = Field(default=30, ge=1, le=500)
     bootstrap_batch_size: int = Field(default=120, ge=1, le=1000)
     sqlite_path: str = "ai4mh.db"
-    allowed_origins: list[str] = Field(default=["http://localhost:3000", "http://localhost:5173"])
+    allowed_origins: list[str] = Field(
+        default=[
+            "http://localhost:3000",
+            "http://localhost:4173",
+            "http://localhost:5173",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:4173",
+            "http://127.0.0.1:5173",
+        ]
+    )
     weights: dict[str, float] = Field(
         default={
             "sentiment": 0.35,

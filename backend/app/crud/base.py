@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from app.core.models.alert import Alert, LogEvent
-from app.core.models.post import EnrichedPost
-from app.core.models.score import RegionScore
+from app.schemas.alert import Alert, LogEvent
+from app.schemas.post import EnrichedPost
+from app.schemas.score import RegionScore
 
 
 class Store(ABC):

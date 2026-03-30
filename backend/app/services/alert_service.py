@@ -4,11 +4,11 @@ from datetime import datetime, timezone
 
 from fastapi import HTTPException
 
-from app.config import settings
-from app.core.models.alert import Alert, LogEvent
-from app.core.models.post import EnrichedPost
-from app.core.models.score import RegionScore
-from app.core.stores.base import Store
+from app.core.config import settings
+from app.crud.base import Store
+from app.schemas.alert import Alert, LogEvent
+from app.schemas.post import EnrichedPost
+from app.schemas.score import RegionScore
 
 
 class AlertService:

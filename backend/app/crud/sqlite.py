@@ -3,10 +3,10 @@ from __future__ import annotations
 import sqlite3
 import threading
 
-from app.core.models.alert import Alert, LogEvent
-from app.core.models.post import EnrichedPost
-from app.core.models.score import RegionScore
-from app.core.stores.base import Store
+from app.schemas.alert import Alert, LogEvent
+from app.schemas.post import EnrichedPost
+from app.schemas.score import RegionScore
+from app.crud.base import Store
 
 
 class SQLiteStore(Store):
@@ -50,7 +50,6 @@ class SQLiteStore(Store):
                     "INSERT OR REPLACE INTO posts (id, idx, data) VALUES (?, ?, ?)",
                     payload,
                 )
-                # TODO: this pruning query is fine for a toy deployment, but it will not age well under heavy churn.
                 connection.execute(
                     f"DELETE FROM posts WHERE id NOT IN (SELECT id FROM posts ORDER BY idx DESC LIMIT {self._max_posts})"
                 )

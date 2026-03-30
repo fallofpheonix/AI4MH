@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from collections import defaultdict
 
-from app.config import settings
-from app.core.models.alert import LogEvent
-from app.core.models.post import EnrichedPost
-from app.core.models.score import RegionScore
-from app.core.stores.base import Store
+from app.core.config import settings
+from app.crud.base import Store
+from app.schemas.alert import LogEvent
+from app.schemas.post import EnrichedPost
+from app.schemas.score import RegionScore
 from app.services.alert_service import AlertService
 from app.services.enrichment_service import EnrichmentService
 from app.services.ingestion_service import IngestionService

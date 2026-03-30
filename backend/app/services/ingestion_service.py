@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime as dt
 import random
 
-from app.core.models.post import RawPost
+from app.schemas.post import RawPost
 
 REGIONS: list[dict[str, int | str]] = [
     {"id": "CA-LA", "name": "Los Angeles, CA", "population": 3_980_000},

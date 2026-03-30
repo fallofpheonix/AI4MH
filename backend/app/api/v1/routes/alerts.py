@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 
 from app.api.dependencies import get_container
-from app.core.runtime import ApplicationContainer
+from app.core.container import ApplicationContainer
 
 router = APIRouter(tags=["alerts"])
 

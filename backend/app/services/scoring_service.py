@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from collections import defaultdict
 
-from app.config import settings
-from app.core.models.post import EnrichedPost
-from app.core.models.score import RegionScore
+from app.core.config import settings
+from app.schemas.post import EnrichedPost
+from app.schemas.score import RegionScore
 
 
 class ScoringService:

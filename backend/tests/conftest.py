@@ -5,10 +5,10 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 
-from app.core.models.alert import Alert
-from app.core.runtime import ApplicationContainer
-from app.core.stores.memory import MemoryStore
+from app.core.container import ApplicationContainer
+from app.crud.memory import MemoryStore
 from app.main import create_app
+from app.schemas.alert import Alert
 from app.services.alert_service import AlertService
 from app.services.enrichment_service import EnrichmentService
 from app.services.ingestion_service import IngestionService

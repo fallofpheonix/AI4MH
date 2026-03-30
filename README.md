@@ -14,14 +14,21 @@ AI4MH is a small crisis-monitoring demo: it generates synthetic posts, enriches 
 ```text
 backend/
   app/
-    api/       HTTP routes and request wiring
-    config/    runtime settings
-    core/      domain models and storage contracts
+    api/       dependencies, API router, versioned routes
+    core/      runtime settings, container, store factory
+    crud/      persistence interfaces and store implementations
+    schemas/   Pydantic domain and API payload models
     services/  ingestion, enrichment, scoring, alert workflows
     utils/     small shared helpers
   tests/       critical-path tests
 frontend/
-  src/         dashboard UI
+  src/
+    components/  common, layout, feature modules
+    hooks/       React state/polling orchestration
+    pages/       route-level views
+    services/    API client and data fetching
+    styles/      global styles
+    utils/       UI helpers
 ```
 
 ## Run locally
@@ -44,6 +51,7 @@ npm run dev
 ```
 
 Backend runs on `http://localhost:8000` and the dashboard runs on `http://localhost:5173`.
+The frontend targets the versioned API at `http://localhost:8000/api/v1` by default.
 
 ## Tests
 
@@ -56,5 +64,5 @@ pytest
 ## A few decisions
 
 - The backend keeps a thin API layer and pushes behavior into services.
-- SQLite is enough here; the store contract is deliberately small so it can be swapped later.
+- SQLite is enough here; the `crud.Store` contract is deliberately small so it can be swapped later.
 - The scoring model is intentionally simple and explainable. It is not trying to be statistically clever.
