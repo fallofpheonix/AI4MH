@@ -1,3 +1,4 @@
+"""Pydantic Settings for AI4MH — reads AI4MH_* environment variables and .env files."""
 from __future__ import annotations
 
 import json

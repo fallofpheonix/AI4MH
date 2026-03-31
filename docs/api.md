@@ -1,16 +1,20 @@
-# API
+# API Reference
 
 Base path: `/api/v1`
 
+All requests and responses use JSON. Successful responses return HTTP `200` unless noted. Error responses return a JSON body with a `detail` field.
+
 ## `POST /ingest`
 
-Generate and process a synthetic batch.
+Generate and process a synthetic batch of posts through the full pipeline.
 
 Query parameters:
 
-- `n` integer, optional, default `30`
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `n` | integer | `30` | Number of synthetic posts to generate |
 
-Response:
+Response `200`:
 
 ```json
 {
@@ -22,13 +26,15 @@ Response:
 
 ## `GET /posts`
 
-Return recent enriched posts.
+Return recent enriched posts ordered by ingestion recency (newest first).
 
 Query parameters:
 
-- `limit` integer, optional, default `60`
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `limit` | integer | `60` | Maximum number of posts to return |
 
-Response shape:
+Response `200`:
 
 ```json
 {
@@ -58,9 +64,9 @@ Response shape:
 
 ## `GET /scores`
 
-Return current regional scores.
+Return the current set of regional crisis scores, sorted by `crisis_score` descending.
 
-Response shape:
+Response `200`:
 
 ```json
 {
@@ -86,9 +92,9 @@ Response shape:
 
 ## `GET /alerts`
 
-Return current alerts.
+Return all current alerts (any status).
 
-Response shape:
+Response `200`:
 
 ```json
 {
@@ -102,26 +108,33 @@ Response shape:
       "sample_size": 25,
       "created_at": "2026-03-31T10:00:00+00:00",
       "updated_at": "2026-03-31T10:00:00+00:00",
-      "score_breakdown": {},
+      "score_breakdown": {
+        "sentiment_intensity": 0.68,
+        "volume_spike": 0.92,
+        "geo_cluster": 0.56,
+        "trend_accel": 0.71,
+        "bot_ratio": 0.0741,
+        "confidence": 0.625
+      },
       "evidence_post_ids": ["post_123456"]
     }
   ]
 }
 ```
 
+Alert status values: `review_required` | `acknowledged` | `dismissed` | `resolved`
+
 ## `POST /alerts/{alert_id}/ack`
 
 Transition alert status to `acknowledged`.
 
-## `POST /alerts/{alert_id}/dismiss`
+Path parameters:
 
-Transition alert status to `dismissed`.
+| Name | Type | Description |
+|---|---|---|
+| `alert_id` | string (UUID) | ID of the alert to acknowledge |
 
-## `POST /alerts/{alert_id}/resolve`
-
-Transition alert status to `resolved`.
-
-Transition response shape:
+Response `200`:
 
 ```json
 {
@@ -133,17 +146,35 @@ Transition response shape:
 }
 ```
 
-Unknown alert IDs return `404`.
+Errors:
+
+| Status | Condition |
+|---|---|
+| `404` | No alert with the given ID exists |
+
+## `POST /alerts/{alert_id}/dismiss`
+
+Transition alert status to `dismissed`.
+
+Path and error behaviour identical to `/ack`.
+
+## `POST /alerts/{alert_id}/resolve`
+
+Transition alert status to `resolved`.
+
+Path and error behaviour identical to `/ack`.
 
 ## `GET /logs`
 
-Return recent log events.
+Return recent pipeline log events ordered by event time ascending.
 
 Query parameters:
 
-- `limit` integer, optional, default `100`
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `limit` | integer | `100` | Maximum number of events to return |
 
-Response shape:
+Response `200`:
 
 ```json
 {
@@ -161,11 +192,19 @@ Response shape:
 }
 ```
 
+Known event types:
+
+| Event | Payload fields | Description |
+|---|---|---|
+| `ingest_completed` | `n`, `total_posts`, `regions` | Logged after every pipeline cycle |
+| `alert_generated` | `region`, `score`, `confidence`, `sample_size` | Logged when a new alert is created |
+| `alert_status_changed` | `alert_id`, `new_status` | Logged on every status transition |
+
 ## `GET /bias`
 
-Return population-tier and region-level summary metrics.
+Return population-tier and region-level summary metrics for fairness review.
 
-Response shape:
+Response `200`:
 
 ```json
 {
@@ -177,10 +216,27 @@ Response shape:
       "avg_confidence": 0.54,
       "alert_rate": 0.25,
       "low_sample_rate": 0.0
-    }
+    },
+    "suburban": { "...": "..." },
+    "rural": { "...": "..." }
   },
-  "by_region": [],
-  "notes": [],
+  "by_region": [
+    {
+      "region_id": "CA-LA",
+      "population_tier": "urban",
+      "post_count": 25,
+      "crisis_score": 0.74,
+      "confidence": 0.63,
+      "alert_flag": true,
+      "low_sample_flag": false
+    }
+  ],
+  "notes": [
+    "These numbers are guardrails, not proof of fairness.",
+    "Operators should treat low-volume regions with extra skepticism."
+  ],
   "as_of": "2026-03-31T10:00:00+00:00"
 }
 ```
+
+Population tiers: `rural` (< 100 k), `suburban` (100 k – 1 M), `urban` (≥ 1 M).

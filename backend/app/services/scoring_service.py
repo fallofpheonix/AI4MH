@@ -1,3 +1,4 @@
+"""Scoring service — computes weighted regional crisis scores from enriched posts."""
 from __future__ import annotations
 
 from collections import defaultdict

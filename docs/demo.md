@@ -1,36 +1,54 @@
 # Demo Notes
 
-## Expected Behavior
+## System Behaviour on Startup
 
-On backend startup, the pipeline bootstraps synthetic posts if the store is empty.
+When the backend starts for the first time (empty database) it automatically runs one bootstrap pipeline cycle of 120 synthetic posts. This seeds all four SQLite tables so the dashboard has something to display immediately without needing a manual ingest.
 
-The frontend dashboard then shows:
+Subsequent restarts reuse the existing database. Pass a fresh `AI4MH_SQLITE_PATH` to start clean.
 
-- current alert list
-- recent enriched posts
-- recent log events
-- region and post counts
+## What the Dashboard Shows
+
+| Section | Content |
+|---|---|
+| **Metric pills** (top bar) | Live counts of visible posts, scored regions, and active alerts |
+| **Alerts** | All alerts with status, region, score, and action buttons (Ack / Dismiss / Resolve) |
+| **Posts table** | Most recent enriched posts with sentiment, NLP flag, and region crisis score |
+| **Logs** | Last 20 pipeline events ordered by time ascending |
 
 ## Manual Demo Flow
 
-1. Start the backend.
-2. Start the frontend.
-3. Open the dashboard.
-4. Trigger `Ingest Posts`.
+1. Start the backend (`make dev-backend` or `docker compose up --build`).
+2. Start the frontend (`make dev-frontend`).
+3. Open the dashboard at `http://localhost:5173` (or `http://localhost:80` with Docker).
+4. Click **Ingest Posts** to trigger a manual cycle of 30 synthetic posts.
 5. Observe:
-   - total posts increase
-   - scores refresh
-   - logs append `ingest_completed`
-   - alerts appear when high-scoring regions are generated
+   - **Posts** count increases.
+   - **Regions** count reflects all scored regions.
+   - **Logs** appends an `ingest_completed` event.
+   - **Alerts** panel populates when any region crosses the escalation threshold (`crisis_score ≥ 0.70`, `confidence ≥ 0.60`, `post_count ≥ 10`, `bot_ratio < 0.25`).
+6. Click **Ack**, **Dismiss**, or **Resolve** on an alert to change its status. The action is reflected immediately.
 
-## Polling Behavior
+## Live Mode
 
-The frontend has a live mode toggle.
+The dashboard has a **Pause / Resume** toggle next to the Ingest button.
 
-- `Resume` enables periodic ingestion every 5 seconds.
-- `Pause` stops automated ingestion.
+- **Resume** (default on load) — triggers a full ingest cycle every 5 seconds automatically.
+- **Pause** — stops the timer; the dashboard retains its last state.
 
-This is demo behavior, not production-safe ingestion orchestration.
+Live mode exists for demonstration purposes only. It is not production-safe ingestion orchestration.
+
+## Scoring Escalation
+
+A region raises an alert only when all four conditions are met simultaneously:
+
+```
+crisis_score  ≥ 0.70   (weighted blend of sentiment, volume, cluster, trend)
+confidence    ≥ 0.60
+post_count    ≥ 10     (clean / non-bot posts only)
+bot_ratio     < 0.25
+```
+
+Because the synthetic data is random, not every ingest cycle will produce alerts. Running several cycles (or using a larger `n`) increases the probability of seeing alerts.
 
 ## Verification Commands
 
@@ -41,14 +59,14 @@ cd backend
 pytest tests
 ```
 
-Frontend build:
+Frontend production build:
 
 ```bash
 cd frontend
 npm run build
 ```
 
-Full smoke check:
+Full stack smoke check (starts both servers locally and validates the HTTP surface):
 
 ```bash
 bash scripts/full_health_check.sh
@@ -57,6 +75,7 @@ bash scripts/full_health_check.sh
 ## Known Limits
 
 - Ingestion is random and non-deterministic between runs.
-- There is no authentication or operator identity model.
-- SQLite is used as a local demo store.
-- Alerts are local workflow state, not externally integrated incidents.
+- There is no authentication, operator identity, or session model.
+- SQLite is a local demo store — not suitable for concurrent production use.
+- Alerts are local workflow state only; there is no external incident integration.
+- The frontend has no automated test suite.

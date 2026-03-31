@@ -1,3 +1,4 @@
+"""SQLite-backed Store implementation using WAL mode for concurrent read safety."""
 from __future__ import annotations
 
 import sqlite3

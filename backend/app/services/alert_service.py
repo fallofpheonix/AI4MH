@@ -1,3 +1,4 @@
+"""Alert service — manages alert lifecycle: creation, updates, and status transitions."""
 from __future__ import annotations
 
 from datetime import datetime, timezone

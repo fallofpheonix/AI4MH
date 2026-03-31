@@ -1,3 +1,4 @@
+"""Abstract Store interface defining the persistence contract for the pipeline."""
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

@@ -1,3 +1,4 @@
+"""Ingestion service — generates synthetic RawPost objects for pipeline input."""
 from __future__ import annotations
 
 import datetime as dt

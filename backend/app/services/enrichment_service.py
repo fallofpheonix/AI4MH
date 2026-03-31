@@ -1,3 +1,4 @@
+"""Enrichment service — adds VADER sentiment scores and crisis keyword matches to raw posts."""
 from __future__ import annotations
 
 import logging

@@ -1,3 +1,4 @@
+"""Pipeline service — orchestrates the full ingest → enrich → score → alert cycle."""
 from __future__ import annotations
 
 from collections import defaultdict
