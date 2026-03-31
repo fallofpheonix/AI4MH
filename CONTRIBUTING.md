@@ -1,99 +1,64 @@
 # Contributing to AI4MH
 
-## Prerequisites
+Thank you for your interest in contributing to AI4MH. This project is dedicated to building robust, governance-first behavioral analysis tools for mental health crisis monitoring.
 
-- Python 3.10+
-- Node.js 18+
-- Git
+## 🚀 Getting Started
 
-## Local Setup
+### Prerequisites
+- **Python**: 3.10+
+- **Node.js**: 18+ (for dashboard)
+- **Git**: For version control
 
-```bash
-git clone https://github.com/fallofpheonix/AI4MH.git
-cd AI4MH
+### Local Setup
 
-cd backend
-python3 -m venv .venv312
-source .venv312/bin/activate
-python -m pip install -r requirements.txt
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/fallofpheonix/AI4MH.git
+   cd AI4MH
+   ```
 
-cd ../frontend
-npm install
-```
+2. **Backend Setup**:
+   ```bash
+   cd backend
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
 
-## Run Locally
+3. **Frontend Setup**:
+   ```bash
+   cd ../frontend
+   npm install
+   ```
 
-Backend:
+## 🛠 Development Workflow
 
-```bash
-cd backend
-source .venv312/bin/activate
-uvicorn main:app --reload
-```
+### Running the Services
 
-Frontend:
+- **Backend (FastAPI)**: `cd backend && uvicorn main:app --reload`
+- **Frontend (React)**: `cd frontend && npm run dev`
 
-```bash
-cd frontend
-npm run dev
-```
+### Repository Standards
 
-Runtime URLs:
+- **Determinism**: Every signal extraction and scoring component must be deterministic.
+- **Explainability**: New features must include audit logging and explainability hooks.
+- **Safety**: Do not implement automated crisis intervention; all high-risk signals must be gated for human review.
 
-- API docs: `http://127.0.0.1:8000/docs`
-- API base: `http://127.0.0.1:8000/api/v1`
-- Dashboard: `http://127.0.0.1:5173`
+## 📝 Documentation Rules
 
-## Validation Before PR
+Always update the following if your changes affect the core logic or API:
+- `README.md`: For high-level features and setup.
+- `ROADMAP.md`: If adding or shifting major milestones.
+- `GSoC_2026_Proposal_fallofpheonix.md`: If the core technical design or evaluation plan evolves.
 
-```bash
-cd backend
-./.venv312/bin/python -m pytest
+## 🧪 Validation Before Pull Request
 
-cd ../frontend
-npm run build
+Ensure your changes do not break the existing verification suite:
 
-cd ..
-bash scripts/full_health_check.sh
-```
+1. **Backend Tests**: `cd backend && pytest`
+2. **Frontend Build**: `cd frontend && npm run build`
+3. **Health Check**: `bash scripts/full_health_check.sh`
 
-## Repository Conventions
+---
 
-### Backend
-
-- Keep API handlers thin.
-- Put orchestration and business logic in `backend/app/services`.
-- Put persistence contracts and implementations in `backend/app/crud`.
-- Put typed payload models in `backend/app/schemas`.
-- Put runtime settings and application wiring in `backend/app/core`.
-
-### Frontend
-
-- Keep page composition in `frontend/src/pages`.
-- Keep stateful orchestration in `frontend/src/hooks`.
-- Keep network code in `frontend/src/services`.
-- Keep reusable UI in `frontend/src/components/common` and `frontend/src/components/layout`.
-- Keep domain-specific UI in `frontend/src/components/features`.
-- Use `@` imports for `frontend/src/*`.
-
-## Documentation Rules
-
-Update documentation when changing:
-
-- API routes or payloads
-- environment variables
-- repository layout
-- verification or deployment steps
-
-Minimum files to consider:
-
-- `README.md`
-- `docs/ARCHITECTURE.md`
-- `SUBMISSION/*.md`
-- `SUBMISSION/docs/*.md`
-
-## Commit Guidelines
-
-- Keep commits scoped to one concern.
-- Use descriptive messages.
-- Do not mix structural refactors with unrelated logic changes unless necessary to keep the tree buildable.
+*For technical deep-dives, please refer to the [GSoC 2026 Proposal](GSoC_2026_Proposal_fallofpheonix.md).*

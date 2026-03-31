@@ -60,19 +60,20 @@ if [[ "$START_SERVICES" -eq 1 ]]; then
   lsof -ti tcp:5173 | xargs kill -9 >/dev/null 2>&1 || true
 
   echo "[1/5] Starting backend"
-  cd "$ROOT_DIR/backend"
+  cd "$ROOT_DIR"
   if [[ ! -d .venv312 ]]; then
     python3 -m venv .venv312
   fi
-  VENV_PYTHON="$ROOT_DIR/backend/.venv312/bin/python"
+  VENV_PYTHON="$ROOT_DIR/.venv312/bin/python"
   if ! "$VENV_PYTHON" -c "import fastapi,uvicorn,vaderSentiment,pydantic" >/dev/null 2>&1; then
     "$VENV_PYTHON" -m pip install -q -r requirements.txt
   fi
-  nohup "$VENV_PYTHON" -m uvicorn main:app --host 127.0.0.1 --port 8000 > /tmp/ai4mh_health_backend.log 2>&1 &
+  cd "$ROOT_DIR/src/backend"
+  nohup "$VENV_PYTHON" -m uvicorn app.main:app --host 127.0.0.1 --port 8000 > /tmp/ai4mh_health_backend.log 2>&1 &
   BACK_PID=$!
 
   echo "[2/5] Starting frontend"
-  cd "$ROOT_DIR/frontend"
+  cd "$ROOT_DIR/src/frontend"
   if [[ ! -d node_modules ]]; then
     npm install --silent
   fi

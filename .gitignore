@@ -14,4 +14,8 @@ dist/
 ai4mh.db
 ai4mh.db-shm
 ai4mh.db-wal
-
+*.log
+*.tmp
+*.ckpt
+data/*
+!data/sample/
