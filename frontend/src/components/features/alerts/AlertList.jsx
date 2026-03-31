@@ -10,8 +10,8 @@ export const AlertList = memo(function AlertList({ alerts }) {
         <div className="panel__empty">No active crisis alerts</div>
       ) : (
         <ul className="alert-list">
-          {alerts.map((alert, index) => (
-            <li className="alert-list__item" key={`${alert.region}-${index}`}>
+          {alerts.map((alert) => (
+            <li className="alert-list__item" key={alert.id}>
               <strong>{alert.region}</strong>
               <span>
                 score{" "}
