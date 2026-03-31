@@ -5,6 +5,9 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 API_URL="${API_URL:-http://127.0.0.1:8000}"
 WEB_URL="${WEB_URL:-http://127.0.0.1:5173}"
 API_PREFIX="${API_PREFIX:-/api/v1}"
+DEFAULT_VENV_DIR="$ROOT_DIR/backend/.venv"
+VENV_DIR="${VENV_DIR:-$DEFAULT_VENV_DIR}"
+PYTHON_BIN="${PYTHON_BIN:-$(command -v python3.12 || command -v python3)}"
 START_SERVICES=1
 
 if [[ "${1:-}" == "--no-start" ]]; then
@@ -61,21 +64,22 @@ if [[ "$START_SERVICES" -eq 1 ]]; then
 
   echo "[1/5] Starting backend"
   cd "$ROOT_DIR"
-  if [[ ! -d .venv312 ]]; then
-    python3 -m venv .venv312
+  if [[ ! -x "$VENV_DIR/bin/python" ]]; then
+    "$PYTHON_BIN" -m venv "$VENV_DIR"
   fi
-  VENV_PYTHON="$ROOT_DIR/.venv312/bin/python"
+  VENV_PYTHON="$VENV_DIR/bin/python"
   if ! "$VENV_PYTHON" -c "import fastapi,uvicorn,vaderSentiment,pydantic" >/dev/null 2>&1; then
-    "$VENV_PYTHON" -m pip install -q -r requirements.txt
+    "$VENV_PYTHON" -m pip install -q --upgrade pip setuptools wheel
+    "$VENV_PYTHON" -m pip install -q -e "$ROOT_DIR/backend[dev]"
   fi
-  cd "$ROOT_DIR/src/backend"
+  cd "$ROOT_DIR/backend"
   nohup "$VENV_PYTHON" -m uvicorn app.main:app --host 127.0.0.1 --port 8000 > /tmp/ai4mh_health_backend.log 2>&1 &
   BACK_PID=$!
 
   echo "[2/5] Starting frontend"
-  cd "$ROOT_DIR/src/frontend"
+  cd "$ROOT_DIR/frontend"
   if [[ ! -d node_modules ]]; then
-    npm install --silent
+    npm ci --silent
   fi
   nohup npm run dev -- --host 127.0.0.1 --port 5173 > /tmp/ai4mh_health_frontend.log 2>&1 &
   FRONT_PID=$!
