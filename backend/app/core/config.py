@@ -7,14 +7,20 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-LEXICON_PATH = PROJECT_ROOT / "data" / "sample" / "lexicons" / "crisis_terms_v1.json"
 BASE_DIR = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+LEXICON_PATHS = (
+    PROJECT_ROOT / "data" / "sample" / "lexicons" / "crisis_terms_v1.json",
+    BASE_DIR / "app" / "fixtures" / "crisis_terms_v1.json",
+)
 
 
 def load_crisis_terms() -> list[str]:
-    with LEXICON_PATH.open(encoding="utf-8") as handle:
-        return json.load(handle)
+    for lexicon_path in LEXICON_PATHS:
+        if lexicon_path.exists():
+            with lexicon_path.open(encoding="utf-8") as handle:
+                return json.load(handle)
+    raise FileNotFoundError("crisis lexicon not found in runtime or packaged fixture paths")
 
 
 class Settings(BaseSettings):

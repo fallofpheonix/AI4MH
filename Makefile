@@ -15,7 +15,7 @@ frontend-install:
 
 install: backend-install frontend-install
 
-test:
+test: backend-install
 	cd backend && .venv/bin/python -m pytest tests
 
 build:
