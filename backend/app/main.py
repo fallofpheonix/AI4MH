@@ -5,12 +5,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes.alerts import router as alerts_router
-from app.api.routes.ingest import router as ingest_router
-from app.api.routes.monitoring import router as monitoring_router
-from app.config import settings
-from app.core.runtime import ApplicationContainer
-from app.core.stores.sqlite import SQLiteStore
+from app.api.router import api_router
+from app.core.config import settings
+from app.core.container import ApplicationContainer
+from app.core.db import create_store
 from app.services.alert_service import AlertService
 from app.services.enrichment_service import EnrichmentService
 from app.services.ingestion_service import IngestionService
@@ -19,7 +17,7 @@ from app.services.scoring_service import ScoringService
 
 
 def build_container() -> ApplicationContainer:
-    store = SQLiteStore(db_path=settings.sqlite_path, max_posts=settings.max_posts)
+    store = create_store()
     ingestion = IngestionService()
     enrichment = EnrichmentService()
     scoring = ScoringService()
@@ -49,9 +47,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    application.include_router(monitoring_router, prefix=settings.api_prefix)
-    application.include_router(ingest_router, prefix=settings.api_prefix)
-    application.include_router(alerts_router, prefix=settings.api_prefix)
+    application.include_router(api_router, prefix=settings.api_prefix)
     return application
 
 

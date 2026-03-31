@@ -4,6 +4,10 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 API_URL="${API_URL:-http://127.0.0.1:8000}"
 WEB_URL="${WEB_URL:-http://127.0.0.1:5173}"
+API_PREFIX="${API_PREFIX:-/api/v1}"
+DEFAULT_VENV_DIR="$ROOT_DIR/backend/.venv"
+VENV_DIR="${VENV_DIR:-$DEFAULT_VENV_DIR}"
+PYTHON_BIN="${PYTHON_BIN:-$(command -v python3.12 || command -v python3)}"
 START_SERVICES=1
 
 if [[ "${1:-}" == "--no-start" ]]; then
@@ -59,47 +63,48 @@ if [[ "$START_SERVICES" -eq 1 ]]; then
   lsof -ti tcp:5173 | xargs kill -9 >/dev/null 2>&1 || true
 
   echo "[1/5] Starting backend"
+  cd "$ROOT_DIR"
+  if [[ ! -x "$VENV_DIR/bin/python" ]]; then
+    "$PYTHON_BIN" -m venv "$VENV_DIR"
+  fi
+  VENV_PYTHON="$VENV_DIR/bin/python"
+  if ! "$VENV_PYTHON" -c "import fastapi,uvicorn,vaderSentiment,pydantic" >/dev/null 2>&1; then
+    "$VENV_PYTHON" -m pip install -q --upgrade pip setuptools wheel
+    "$VENV_PYTHON" -m pip install -q -e "$ROOT_DIR/backend[dev]"
+  fi
   cd "$ROOT_DIR/backend"
-  if [[ ! -d .venv312 ]]; then
-    python3 -m venv .venv312
-  fi
-  # shellcheck disable=SC1091
-  source .venv312/bin/activate
-  if ! python -c "import fastapi,uvicorn,vaderSentiment,pydantic" >/dev/null 2>&1; then
-    python -m pip install -q -r requirements.txt
-  fi
-  nohup uvicorn main:app --host 127.0.0.1 --port 8000 > /tmp/ai4mh_health_backend.log 2>&1 &
+  nohup "$VENV_PYTHON" -m uvicorn app.main:app --host 127.0.0.1 --port 8000 > /tmp/ai4mh_health_backend.log 2>&1 &
   BACK_PID=$!
 
   echo "[2/5] Starting frontend"
   cd "$ROOT_DIR/frontend"
   if [[ ! -d node_modules ]]; then
-    npm install --silent
+    npm ci --silent
   fi
   nohup npm run dev -- --host 127.0.0.1 --port 5173 > /tmp/ai4mh_health_frontend.log 2>&1 &
   FRONT_PID=$!
 fi
 
 echo "[3/5] Waiting for services"
-wait_for_url "$API_URL/api/scores"
+wait_for_url "$API_URL$API_PREFIX/scores"
 wait_for_url "$WEB_URL"
 
 echo "[4/5] Validating API"
-POSTS="$(curl -fsS "$API_URL/api/posts?limit=3")"
+POSTS="$(curl -fsS "$API_URL$API_PREFIX/posts?limit=3")"
 assert_json "$POSTS" "isinstance(data.get('posts'), list) and len(data.get('posts')) == 3"
-SCORES="$(curl -fsS "$API_URL/api/scores")"
+SCORES="$(curl -fsS "$API_URL$API_PREFIX/scores")"
 assert_json "$SCORES" "isinstance(data.get('scores'), list)"
 
-ALERTS="$(curl -fsS "$API_URL/api/alerts")"
+ALERTS="$(curl -fsS "$API_URL$API_PREFIX/alerts")"
 assert_json "$ALERTS" "isinstance(data.get('alerts'), list)"
 
-LOGS="$(curl -fsS "$API_URL/api/logs?limit=20")"
+LOGS="$(curl -fsS "$API_URL$API_PREFIX/logs?limit=20")"
 assert_json "$LOGS" "isinstance(data.get('logs'), list)"
 
-BIA="$(curl -fsS "$API_URL/api/bias")"
+BIA="$(curl -fsS "$API_URL$API_PREFIX/bias")"
 assert_json "$BIA" "isinstance(data.get('by_tier'), dict) and isinstance(data.get('by_region'), list)"
 
-INGEST="$(curl -fsS -X POST "$API_URL/api/ingest?n=5")"
+INGEST="$(curl -fsS -X POST "$API_URL$API_PREFIX/ingest?n=5")"
 assert_json "$INGEST" "'total_posts' in data and 'regions_scored' in data and 'alerts' in data"
 
 echo "[5/5] Validating frontend"

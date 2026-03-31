@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.core.models.post import EnrichedPost
+from app.schemas.post import EnrichedPost
 from app.services.scoring_service import ScoringService
 
 

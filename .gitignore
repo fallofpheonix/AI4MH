@@ -1,17 +1,25 @@
+# Python
 __pycache__/
 *.py[cod]
-*.pyo
-.DS_Store
-.env
-.venv/
-.venv312/
-.venv_ai4mh/
-node_modules/
-dist/
 .pytest_cache/
-.ruff_cache/
-*.egg-info/
-ai4mh.db
-ai4mh.db-shm
-ai4mh.db-wal
+.venv*/
+.env
 
+# Node / frontend outputs
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+
+# Runtime state
+backend/ai4mh.db*
+
+# Local documentation / proposal artifacts
+SUBMISSION/
+output/
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -5,15 +5,15 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 
-from app.core.models.alert import Alert
-from app.core.runtime import ApplicationContainer
-from app.core.stores.memory import MemoryStore
+from app.core.container import ApplicationContainer
 from app.main import create_app
+from app.schemas.alert import Alert
 from app.services.alert_service import AlertService
 from app.services.enrichment_service import EnrichmentService
 from app.services.ingestion_service import IngestionService
 from app.services.pipeline_service import PipelineService
 from app.services.scoring_service import ScoringService
+from tests.fakes.memory_store import MemoryStore
 
 
 @pytest.fixture()

@@ -4,11 +4,10 @@ from datetime import datetime, timezone
 
 from fastapi import HTTPException
 
-from app.config import settings
-from app.core.models.alert import Alert, LogEvent
-from app.core.models.post import EnrichedPost
-from app.core.models.score import RegionScore
-from app.core.stores.base import Store
+from app.crud.base import Store
+from app.schemas.alert import Alert, LogEvent
+from app.schemas.post import EnrichedPost
+from app.schemas.score import RegionScore
 
 
 class AlertService:
@@ -26,24 +25,23 @@ class AlertService:
         log_events: list[LogEvent] = []
 
         for score in scores:
-            if score.crisis_score <= settings.alert_threshold:
+            existing = current_by_region.get(score.region_id)
+            if not score.should_escalate:
+                if existing is not None and existing.status != "review_required":
+                    next_alerts.append(existing)
                 continue
 
             evidence_ids = [post.id for post in region_posts.get(score.region_id, []) if post.nlp_crisis_flag]
-            existing = current_by_region.get(score.region_id)
-            if existing is not None and existing.status != "review_required":
-                next_alerts.append(
-                    existing.model_copy(
-                        update={
-                            "score": round(score.crisis_score, 4),
-                            "confidence": score.confidence,
-                            "sample_size": score.post_count,
-                            "updated_at": self._now(),
-                            "score_breakdown": self._breakdown(score),
-                            "evidence_post_ids": evidence_ids,
-                        }
-                    )
-                )
+            update = {
+                "score": round(score.crisis_score, 4),
+                "confidence": score.confidence,
+                "sample_size": score.post_count,
+                "updated_at": self._now(),
+                "score_breakdown": self._breakdown(score),
+                "evidence_post_ids": evidence_ids,
+            }
+            if existing is not None:
+                next_alerts.append(existing.model_copy(update=update))
                 continue
 
             next_alerts.append(

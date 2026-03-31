@@ -4,8 +4,8 @@ import logging
 
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
-from app.config import settings
-from app.core.models.post import EnrichedPost, RawPost
+from app.core.config import settings
+from app.schemas.post import EnrichedPost, RawPost
 
 logger = logging.getLogger(__name__)
 

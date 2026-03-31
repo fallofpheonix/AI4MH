@@ -1,60 +1,115 @@
 # AI4MH
 
-AI4MH is a small crisis-monitoring demo: it generates synthetic posts, enriches them with sentiment and keyword signals, scores regions, and exposes the results through a FastAPI backend and a React dashboard.
+AI4MH is a full-stack demo for regional mental-health crisis signal monitoring. The system ingests synthetic discussion posts, enriches them with sentiment and keyword signals, aggregates regional scores, persists alert state in SQLite, and exposes the results through a FastAPI API and a React dashboard.
 
-## What it does
+Supported local Python versions: `3.10` to `3.12`
 
-- ingests synthetic mental-health discussion posts
-- scores regions using sentiment, volume, clustering, and trend signals
-- creates review alerts when signal strength crosses a threshold
-- keeps a simple audit trail for ingest and alert transitions
+## Scope
 
-## Project shape
+- Synthetic ingestion only. There are no live social-media connectors.
+- Alerts are decision-support outputs, not automated intervention.
+- Storage is local SQLite for demo reproducibility.
+
+## Repository Layout
 
 ```text
-backend/
-  app/
-    api/       HTTP routes and request wiring
-    config/    runtime settings
-    core/      domain models and storage contracts
-    services/  ingestion, enrichment, scoring, alert workflows
-    utils/     small shared helpers
-  tests/       critical-path tests
-frontend/
-  src/         dashboard UI
+backend/   FastAPI service, scoring pipeline, persistence, tests
+frontend/  React/Vite dashboard
+data/      Minimal runtime sample data
+docs/      Architecture, API, and demo notes
+scripts/   Development smoke checks
 ```
 
-## Run locally
+## Quick Start
+
+### Backend
 
 ```bash
 cd backend
-python3 -m venv .venv312
-source .venv312/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-uvicorn main:app --reload
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip setuptools wheel
+pip install -e '.[dev]'
+uvicorn app.main:app --reload
 ```
 
-In another shell:
+Backend default address: `http://127.0.0.1:8000`
+
+### Frontend
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
-Backend runs on `http://localhost:8000` and the dashboard runs on `http://localhost:5173`.
+Frontend default address: `http://127.0.0.1:5173`
 
-## Tests
+### Full Stack Smoke Check
+
+From the repo root:
 
 ```bash
-cd backend
-source .venv312/bin/activate
-pytest
+bash scripts/full_health_check.sh
 ```
 
-## A few decisions
+This script can bootstrap local backend/frontend dependencies, start both services, and validate the HTTP surface.
 
-- The backend keeps a thin API layer and pushes behavior into services.
-- SQLite is enough here; the store contract is deliberately small so it can be swapped later.
-- The scoring model is intentionally simple and explainable. It is not trying to be statistically clever.
+## Common Commands
+
+```bash
+make backend-install
+make frontend-install
+make dev-backend
+make dev-frontend
+make test
+make build
+make smoke
+```
+
+## Docker Compose
+
+```bash
+docker compose up --build
+```
+
+This starts:
+
+- backend on `http://localhost:8000`
+- frontend on `http://localhost:80`
+
+## API Surface
+
+Base URL: `http://127.0.0.1:8000/api/v1`
+
+- `POST /ingest?n=30`
+- `GET /posts?limit=20`
+- `GET /scores`
+- `GET /alerts`
+- `POST /alerts/{alert_id}/ack`
+- `POST /alerts/{alert_id}/dismiss`
+- `POST /alerts/{alert_id}/resolve`
+- `GET /logs?limit=20`
+- `GET /bias`
+
+Detailed endpoint documentation: [docs/api.md](docs/api.md)
+
+## Documentation
+
+- [Architecture](docs/architecture.md)
+- [API](docs/api.md)
+- [Demo Notes](docs/demo.md)
+
+## Validation
+
+Backend tests:
+
+```bash
+make test
+```
+
+Frontend production build:
+
+```bash
+make build
+```
