@@ -4,6 +4,7 @@ __pycache__/
 .pytest_cache/
 .venv*/
 .env
+*.egg-info/
 
 # Node / frontend outputs
 node_modules/
@@ -17,6 +18,9 @@ backend/ai4mh.db*
 # Local documentation / proposal artifacts
 SUBMISSION/
 output/
+
+# Local tool artifacts
+.playwright-mcp/
 
 # Editor / OS noise
 .DS_Store
